@@ -1,70 +1,158 @@
-/.phpunit.cache
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/storage/pail
-/vendor
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
+#/.phpunit.cache
+#/node_modules
+#/public/build
+#/public/hot
+#/public/storage
+#/storage/*.key
+#/storage/pail
+#/vendor
+#.env
+#.env.backup
+#.env.production
+#.phpactor.json
+#.phpunit.result.cache
+#Homestead.json
+#Homestead.yaml
+#npm-debug.log
+#yarn-error.log
+#/auth.json
+#/.fleet
+#/.idea
+#/.nova
+#/.zed
+#
+## Logs
+#logs
+#*.log
+#npm-debug.log*
+#yarn-debug.log*
+#yarn-error.log*
+#pnpm-debug.log*
+#lerna-debug.log*
+#
+#node_modules
+#.DS_Store
+#dist
+#dist-ssr
+#*.local
+#
+#/cypress/videos/
+#/cypress/screenshots/
+#
+## 👉 Custom Git ignores
+#
+## Editor directories and files
+#.vscode/*
+#!.vscode/extensions.json
+#!.vscode/settings.json
+#!.vscode/*.code-snippets
+#!.vscode/tours
+#.idea
+#*.suo
+#*.ntvs*
+#*.njsproj
+#*.sln
+#*.sw?
+#.yarn
+#
+## iconify dist files
+#resources/js/plugins/iconify/icons.css
+#
+## Ignore MSW script
+#public/mockServiceWorker.js
+#
+## Env files
+#.env*
+#!.env.example
+#
+## Project exclude paths
+#/storage/app/
+#/storage/framework/
+# === 1. Ignorar Secretos y Entorno ===
+# Ignora todos los archivos .env excepto la plantilla de ejemplo
+.env*
+!.env.example
 Homestead.json
 Homestead.yaml
-npm-debug.log
-yarn-error.log
-/auth.json
-/.fleet
-/.idea
-/.nova
-/.zed
 
+# === 2. Ignorar Dependencias ===
+# Se instalan con "composer install"
+/vendor/
+# Se instalan con "pnpm install"
+/node_modules/
+# Archivos de Yarn
+.yarn/
+
+# === 3. Ignorar Archivos de Caché y Logs de Laravel ===
+# Caché de la aplicación
+/bootstrap/cache/
+/storage/framework/
 # Logs
-logs
+/storage/logs/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Archivos específicos de Storage
+/storage/*.key
+/storage/pail/
+/public/storage
+/storage/app/
 
-node_modules
-.DS_Store
-dist
-dist-ssr
-*.local
+# === 4. Ignorar Archivos Específicos de tu Proyecto ===
+# (Los que encontramos en tus capturas)
+#
+# Archivos de Laravel Debugbar
+/storage/debugbar/
+# Archivos de tipos autogenerados (Vue/TS)
+*.d.ts
 
+# === 5. Ignorar Archivos de Compilación (Vite/JS) ===
+/public/build/
+/public/hot
+dist/
+dist-ssr/
+# Archivos de Iconify y MSW generados
+resources/js/plugins/iconify/icons.css
+public/mockServiceWorker.js
+
+# === 6. Ignorar Lock-files (archivos de bloqueo) ===
+# Asumimos que usas pnpm-lock.yaml (que NO se ignora)
+# Ignoramos los de otros manejadores para evitar conflictos
+package-lock.json
+yarn.lock
+
+# === 7. Ignorar Archivos de Pruebas (Cypress) ===
 /cypress/videos/
 /cypress/screenshots/
 
-# 👉 Custom Git ignores
+# === 8. Ignorar Archivos de Sistema Operativo ===
+.DS_Store
+Thumbs.db
 
-# Editor directories and files
+# === 9. Ignorar Archivos de IDE y Editores ===
+# Mantenemos las excepciones para compartir configuración de VSCode
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 !.vscode/*.code-snippets
 !.vscode/tours
-.idea
+# Otros IDEs
+/.fleet/
+/.idea/
+/.nova/
+/.zed/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.yarn
 
-# iconify dist files
-resources/js/plugins/iconify/icons.css
-
-# Ignore MSW script
-public/mockServiceWorker.js
-
-# Env files
-.env*
-!.env.example
-
-# Project exclude paths
-/storage/app/
-/storage/framework/
+# === 10. Ignorar Otros Archivos ===
+.phpactor.json
+/.phpunit.cache
+.phpunit.result.cache
+/auth.json
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
