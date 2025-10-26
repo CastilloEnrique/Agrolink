@@ -19,10 +19,18 @@ class Usuario extends Authenticatable
         'segundo_nombre',
         'primer_apellido',
         'segundo_apellido',
+        'dpi',             // <-- AÑADIR
+        'nit',             // <-- AÑADIR
+        'foto_perfil_url', // <-- AÑADIR
         'correo',
         'telefono',
         'contrasena_hash',
         'estado',
+        'pais_id',          // <-- AÑADIDO
+        'departamento_id',  // <-- AÑADIDO
+        'municipio_id',     // <-- AÑADIDO
+        'aldea_id',         // <-- AÑADIDO
+        'direccion',        // <-- AÑADIDO
     ];
 
     protected $hidden = [
