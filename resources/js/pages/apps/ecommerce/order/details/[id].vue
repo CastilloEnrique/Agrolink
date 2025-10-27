@@ -4,6 +4,16 @@ import product22 from '@images/ecommerce-images/product-22.png'
 import product23 from '@images/ecommerce-images/product-23.png'
 import product24 from '@images/ecommerce-images/product-24.png'
 
+definePage({
+  name: 'apps-ecommerce-order-details-id', // El nombre que busca el router
+  path: '/apps/ecommerce/order/details/:id', // La ruta URL
+  // Opcional: Si esta página necesita permisos, añádelos aquí
+  // meta: {
+  //   action: 'read',
+  //   subject: 'Order', // O el sujeto apropiado
+  // }
+})
+
 const orderData = ref()
 const route = useRoute('apps-ecommerce-order-details-id')
 const { data } = await useApi(`/apps/ecommerce/orders/${ route.params.id }`)

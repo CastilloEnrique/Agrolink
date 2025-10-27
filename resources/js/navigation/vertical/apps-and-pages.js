@@ -189,4 +189,13 @@ export default [
     icon: { icon: 'tabler-square' },
     to: 'pages-dialog-examples',
   },
+  {
+    title: 'Publicar Producto',
+    to: { name: 'apps-productor-publicar' },
+    icon: { icon: 'tabler-upload' },
+    meta: {
+      action: 'create',
+      subject: 'Producto',
+    },
+  },
 ]

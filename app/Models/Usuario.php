@@ -19,7 +19,8 @@ class Usuario extends Authenticatable
         'segundo_nombre',
         'primer_apellido',
         'segundo_apellido',
-        'dpi',             // <-- AÑADIR
+        'dpi',
+        'fecha_nacimiento',
         'nit',             // <-- AÑADIR
         'foto_perfil_url', // <-- AÑADIR
         'correo',
@@ -51,5 +52,11 @@ class Usuario extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(Rol::class, 'rol_usuario', 'usuario_id', 'rol_id');
+    }
+    // En app/Models/Usuario.php
+    public function perfilProductor()
+    {
+        // Un usuario tiene un perfil de productor (relación uno a uno)
+        return $this->hasOne(PerfilProductor::class, 'usuario_id');
     }
 }

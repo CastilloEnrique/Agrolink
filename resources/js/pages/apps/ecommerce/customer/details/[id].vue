@@ -6,6 +6,16 @@ import CustomerTabNotification from '@/views/apps/ecommerce/customer/view/Custom
 import CustomerTabOverview from '@/views/apps/ecommerce/customer/view/CustomerTabOverview.vue'
 import CustomerTabSecurity from '@/views/apps/ecommerce/customer/view/CustomerTabSecurity.vue'
 
+definePage({
+  name: 'apps-ecommerce-customer-details-id', // El nombre que busca el router
+  path: '/apps/ecommerce/customer/details/:id', // La ruta URL
+  // Opcional: Si esta página necesita permisos específicos (ej. solo Admins)
+  // meta: {
+  //   action: 'read',
+  //   subject: 'Customer', 
+  // }
+})
+
 const route = useRoute('apps-ecommerce-customer-details-id')
 const customerData = ref()
 const userTab = ref(null)

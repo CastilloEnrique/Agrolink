@@ -110,6 +110,15 @@ export default [
           { title: 'Permissions', to: 'apps-permissions' },
         ],
       },
+      {
+        title: 'Publicar Producto',
+        to: { name: 'apps-productor-publicar' },
+        icon: { icon: 'tabler-upload' },
+        meta: {
+          action: 'create',
+          subject: 'Producto',
+        },
+      },
     ],
   },
 ]

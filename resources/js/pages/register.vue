@@ -1,25 +1,31 @@
-
 <script setup>
 import { VForm } from 'vuetify/components/VForm'
 import AuthProvider from '@/views/pages/authentication/AuthProvider.vue'
 import { VNodeRenderer } from '@layouts/components/VNodeRenderer'
 import { themeConfig } from '@themeConfig'
+// eslint-disable-next-line import/no-unresolved
 
-// Imports de la lógica
+// --- Imports de Lógica de Vue y Ayudantes ---
 import api from '@/services/axios'
 import { useRouter } from 'vue-router'
+import { ref, watch, onMounted, nextTick } from 'vue'
+import { useGenerateImageVariant } from '@core/composable/useGenerateImageVariant'
 
-// 👇 IMPORTS DE IMÁGENES (Asegúrate de que las rutas @images sean correctas) 👇
+// --- Imports de Validadores (¡Asegúrate que la ruta sea correcta!) ---
+// eslint-disable-next-line import/extensions
+import { requiredValidator, emailValidator, passwordValidator, confirmedValidator } from '@core/utils/validators.js'
+
+// --- IMPORTS DE IMÁGENES ---
 import authV2RegisterIllustrationBorderedDark from '@images/pages/auth-v2-register-illustration-bordered-dark.png'
 import authV2RegisterIllustrationBorderedLight from '@images/pages/auth-v2-register-illustration-bordered-light.png'
 import authV2RegisterIllustrationDark from '@images/pages/auth-v2-register-illustration-dark.png'
-import authV2RegisterIllustrationLight from '@images/pages/auth-v2-register-illustration-light.png' // <-- ESTE FALTABA
+import authV2RegisterIllustrationLight from '@images/pages/auth-v2-register-illustration-light.png'
 import authV2MaskDark from '@images/pages/misc-mask-dark.png'
 import authV2MaskLight from '@images/pages/misc-mask-light.png'
 
-// 👆 --- FIN DE IMPORTS DE IMÁGENES --- 👆
+// --- FIN IMPORTS DE IMÁGENES ---
 
-// 👇 Esta función necesita las variables importadas arriba
+// --- Configuración de Imágenes y Página ---
 const imageVariant = useGenerateImageVariant(authV2RegisterIllustrationLight, authV2RegisterIllustrationDark, authV2RegisterIllustrationBorderedLight, authV2RegisterIllustrationBorderedDark, true)
 const authThemeMask = useGenerateImageVariant(authV2MaskLight, authV2MaskDark)
 
@@ -30,10 +36,11 @@ definePage({
   },
 })
 
+// --- Refs y Estado del Componente ---
 const router = useRouter()
-const refVForm = ref(null) // Para validar el formulario
+const refVForm = ref(null)
 
-// --- Estado del Formulario ---
+// Estado principal del formulario (Incluye eslint-disable para snake_case/camelCase)
 const form = ref({
   // eslint-disable-next-line camelcase
   primer_nombre: '',
@@ -45,6 +52,8 @@ const form = ref({
   segundo_apellido: '',
   dpi: '',
   nit: '',
+  // eslint-disable-next-line camelcase
+  fecha_nacimiento: null,
   correo: '',
   password: '',
   // eslint-disable-next-line camelcase
@@ -56,15 +65,22 @@ const form = ref({
   // eslint-disable-next-line camelcase
   municipio_id: null,
   // eslint-disable-next-line camelcase
-  aldea_id: null, // Sigue siendo opcional
+  aldea_id: null,
   direccion: '',
+  // eslint-disable-next-line camelcase
+  rol_elegido: null,
   privacyPolicies: false,
 })
 
+// Estado para la opción de agregar aldea manualmente
+const isAddingNewAldea = ref(false)
+const newAldeaName = ref('')
+
+// Estado para visibilidad de contraseñas
 const isPasswordVisible = ref(false)
 const isConfirmPasswordVisible = ref(false)
 
-// --- Listas para Selects Anidados ---
+// Listas y estados de carga
 const paises = ref([])
 const departamentos = ref([])
 const municipios = ref([])
@@ -74,14 +90,21 @@ const isLoadingDepartamentos = ref(false)
 const isLoadingMunicipios = ref(false)
 const isLoadingAldeas = ref(false)
 
-// --- Lógica de Cámara y Foto ---
+// Lista fija de opciones de rol para el select
+const opcionesRol = ref([
+  { text: 'Productor (Quiero vender)', value: 'Productor', icon: 'tabler-leaf' },
+  { text: 'Consumidor (Solo quiero comprar)', value: 'Consumidor', icon: 'tabler-shopping-cart' },
+  { text: 'Intermediario', value: 'Intermediario', icon: 'tabler-arrows-left-right' },
+])
+
+// Estado para la foto de perfil (archivo y cámara)
 const fotoFile = ref(null)
 const fotoPreviewUrl = ref(null)
 const showCameraDialog = ref(false)
 const videoPlayer = ref(null)
 const videoStream = ref(null)
 
-// --- Cargar PAÍSES al inicio ---
+// --- Hooks de Ciclo de Vida ---
 onMounted(async () => {
   isLoadingPaises.value = true
   try {
@@ -96,8 +119,9 @@ onMounted(async () => {
   }
 })
 
-// --- Watcher 1: Cargar DEPARTAMENTOS ---
-watch(() => form.value.pais_id, async newPaisId => {
+// --- Watchers (Geografía y Preview de Foto) ---
+watch(() => form.value.pais_id, async (newPaisId, oldPaisId) => {
+  if (newPaisId === oldPaisId) return
   // eslint-disable-next-line camelcase
   form.value.departamento_id = null
   // eslint-disable-next-line camelcase
@@ -107,7 +131,8 @@ watch(() => form.value.pais_id, async newPaisId => {
   departamentos.value = []
   municipios.value = []
   aldeas.value = []
-
+  isAddingNewAldea.value = false
+  newAldeaName.value = ''
   if (newPaisId) {
     isLoadingDepartamentos.value = true
     try {
@@ -122,16 +147,16 @@ watch(() => form.value.pais_id, async newPaisId => {
     }
   }
 })
-
-// --- Watcher 2: Cargar MUNICIPIOS ---
-watch(() => form.value.departamento_id, async newDeptId => {
+watch(() => form.value.departamento_id, async (newDeptId, oldDeptId) => {
+  if (newDeptId === oldDeptId) return
   // eslint-disable-next-line camelcase
   form.value.municipio_id = null
   // eslint-disable-next-line camelcase
   form.value.aldea_id = null
   municipios.value = []
   aldeas.value = []
-
+  isAddingNewAldea.value = false
+  newAldeaName.value = ''
   if (newDeptId) {
     isLoadingMunicipios.value = true
     try {
@@ -145,13 +170,13 @@ watch(() => form.value.departamento_id, async newDeptId => {
     }
   }
 })
-
-// --- Watcher 3: Cargar ALDEAS ---
-watch(() => form.value.municipio_id, async newMuniId => {
+watch(() => form.value.municipio_id, async (newMuniId, oldMuniId) => {
+  if (newMuniId === oldMuniId) return
   // eslint-disable-next-line camelcase
   form.value.aldea_id = null
   aldeas.value = []
-
+  isAddingNewAldea.value = false
+  newAldeaName.value = ''
   if (newMuniId) {
     isLoadingAldeas.value = true
     try {
@@ -165,23 +190,22 @@ watch(() => form.value.municipio_id, async newMuniId => {
     }
   }
 })
-
-
-// --- Watcher 4: Actualizar Preview de Foto ---
 watch(fotoFile, newFileArray => {
   const file = newFileArray ? newFileArray[0] : null
-  if (file) {
+  if (file && file instanceof File) {
     const reader = new FileReader()
 
-    reader.onload = e => (fotoPreviewUrl.value = e.target.result)
+    reader.onload = e => {
+      fotoPreviewUrl.value = e.target.result
+    }
     reader.readAsDataURL(file)
   } else {
     fotoPreviewUrl.value = null
   }
 })
 
+// --- Métodos de la Cámara (Lógica COMPLETA) ---
 
-// --- Métodos de la Cámara ---
 const openCamera = async () => {
   showCameraDialog.value = true
   try {
@@ -189,16 +213,23 @@ const openCamera = async () => {
     await nextTick()
     if (videoPlayer.value) {
       videoPlayer.value.srcObject = videoStream.value
+    } else {
+      console.error("El elemento <video> no está listo.")
+      closeCamera()
     }
   } catch (err) {
     console.error("Error al acceder a la cámara:", err)
-    alert("⛔ No se pudo acceder a la cámara. Asegúrate de dar permisos en el navegador.")
+    alert("⛔ No se pudo acceder a la cámara. Asegúrate de dar permisos en el navegador y que no esté siendo usada por otra aplicación.")
     showCameraDialog.value = false
   }
 }
 
 const takePhoto = () => {
-  if (!videoPlayer.value) return
+  if (!videoPlayer.value || !videoStream.value || videoPlayer.value.readyState < 3) {
+    console.warn("Video no listo para capturar")
+    
+    return
+  }
   const canvas = document.createElement('canvas')
 
   canvas.width = videoPlayer.value.videoWidth
@@ -206,16 +237,20 @@ const takePhoto = () => {
 
   const context = canvas.getContext('2d')
 
-  context.translate(canvas.width, 0) // Voltear para efecto espejo
+  context.translate(canvas.width, 0)
   context.scale(-1, 1)
   context.drawImage(videoPlayer.value, 0, 0, canvas.width, canvas.height)
-
   canvas.toBlob(blob => {
-    const file = new File([blob], 'foto_perfil.jpg', { type: 'image/jpeg' })
+    if (blob) {
+      const file = new File([blob], `foto_webcam_${Date.now()}.jpg`, { type: 'image/jpeg' })
 
-    fotoFile.value = [file] // Simula la estructura de VFileInput
-    closeCamera()
-  }, 'image/jpeg')
+      fotoFile.value = [file]
+      closeCamera()
+    } else {
+      console.error("Error al crear Blob desde canvas.")
+      alert("Error al capturar la foto.")
+    }
+  }, 'image/jpeg', 0.9)
 }
 
 const closeCamera = () => {
@@ -226,15 +261,13 @@ const closeCamera = () => {
   videoStream.value = null
 }
 
-// --- Método Principal: REGISTRAR ---
+// Método principal que se ejecuta al enviar el formulario
 const submitRegister = async () => {
   const { valid } = await refVForm.value.validate()
   if (!valid) return
-
   if (!form.value.privacyPolicies) {
-    // La validación del checkbox ya debería manejar esto, pero por si acaso.
-    alert('Debes aceptar la política de privacidad y términos.')
-
+    alert('Debes aceptar la política de privacidad y términos para continuar.')
+    
     return
   }
 
@@ -247,13 +280,21 @@ const submitRegister = async () => {
   formData.append('segundo_apellido', form.value.segundo_apellido || '')
   formData.append('dpi', form.value.dpi || '')
   formData.append('nit', form.value.nit || '')
+  formData.append('fecha_nacimiento', form.value.fecha_nacimiento || '')
   formData.append('correo', form.value.correo)
   formData.append('password', form.value.password)
   formData.append('password_confirmation', form.value.password_confirmation)
   formData.append('pais_id', form.value.pais_id || '')
   formData.append('departamento_id', form.value.departamento_id || '')
   formData.append('municipio_id', form.value.municipio_id || '')
-  formData.append('aldea_id', form.value.aldea_id || '') // Se envía vacío si es null
+  formData.append('rol_elegido', form.value.rol_elegido || '') // <-- ROL ELEGIDO
+
+  // Lógica condicional para Aldea
+  if (isAddingNewAldea.value && newAldeaName.value.trim()) {
+    formData.append('nueva_aldea_nombre', newAldeaName.value.trim())
+  } else if (!isAddingNewAldea.value && form.value.aldea_id) {
+    formData.append('aldea_id', form.value.aldea_id)
+  }
   formData.append('direccion', form.value.direccion || '')
 
   // Añadir la foto (si existe)
@@ -262,30 +303,29 @@ const submitRegister = async () => {
   }
 
   try {
-    const response = await api.post('/register', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    console.log("Enviando datos de registro:", Object.fromEntries(formData.entries())) // Debugging
 
+    const response = await api.post('/register', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+
+    // Procesar respuesta exitosa
     const { access_token: accessToken, usuario } = response.data
 
     localStorage.setItem('token', accessToken)
     localStorage.setItem('usuario', JSON.stringify(usuario))
     useCookie('accessToken').value = accessToken
     useCookie('userData').value = usuario
-
-    router.push({ name: 'apps-ecommerce-dashboard' }) // O a donde quieras ir después del registro
+    router.push({ name: 'apps-ecommerce-dashboard' })
 
   } catch (error) {
-    console.error('Error en el registro:', error)
-
-    // Mostrar mensaje de error más específico del backend si está disponible
+    // Manejar errores
+    console.error('Error detallado en el registro:', error.response || error)
     let errorMessage = 'Error al registrarse. Verifica tus datos e inténtalo de nuevo.'
     if (error.response?.data?.message) {
       errorMessage = `Error: ${error.response.data.message}`
     } else if (error.response?.data?.errors) {
       const firstErrorKey = Object.keys(error.response.data.errors)[0]
 
-      errorMessage = `Error en el campo '${firstErrorKey}': ${error.response.data.errors[firstErrorKey][0]}`
+      errorMessage = `Error en '${firstErrorKey}': ${error.response.data.errors[firstErrorKey][0]}`
     }
     alert(errorMessage)
   }
@@ -337,10 +377,12 @@ const submitRegister = async () => {
       class="auth-card-v2 d-flex align-center justify-center"
       style="background-color: rgb(var(--v-theme-surface));"
     >
+
       <VCard
         flat
-        :max-width="500"
+        max-width="500"
         class="mt-12 mt-sm-0 pa-4"
+        style="overflow-y: auto; max-height: 95vh;"
       >
         <VCardText>
           <h4 class="text-h4 mb-1">
@@ -357,6 +399,29 @@ const submitRegister = async () => {
             @submit.prevent="submitRegister"
           >
             <VRow>
+              <VCol
+                cols="12"
+                class="mb-4"
+              >
+                <AppSelect
+                  v-model="form.rol_elegido"
+                  :items="opcionesRol"
+                  :rules="[requiredValidator]"
+                  item-title="text"
+                  item-value="value"
+                  label="¿Cuál será tu rol principal?"
+                  placeholder="Selecciona tu tipo de cuenta"
+                  clearable
+                >
+                  <template #item="{ props, item }">
+                    <VListItem
+                      v-bind="props"
+                      :prepend-icon="item.raw.icon"
+                    />
+                  </template>
+                </AppSelect>
+              </VCol>
+
               <VCol cols="6">
                 <AppTextField
                   v-model="form.primer_nombre"
@@ -373,7 +438,6 @@ const submitRegister = async () => {
                   placeholder="(Opcional)"
                 />
               </VCol>
-
               <VCol cols="6">
                 <AppTextField
                   v-model="form.primer_apellido"
@@ -394,12 +458,24 @@ const submitRegister = async () => {
                 <AppTextField
                   v-model="form.dpi"
                   label="DPI (Opcional)"
+                  placeholder="Tu DPI"
                 />
               </VCol>
               <VCol cols="6">
                 <AppTextField
                   v-model="form.nit"
                   label="NIT (Opcional)"
+                  placeholder="Tu NIT"
+                />
+              </VCol>
+
+              <VCol cols="12">
+                <AppDateTimePicker
+                  v-model="form.fecha_nacimiento"
+                  label="Fecha de Nacimiento (Opcional)"
+                  placeholder="Selecciona tu fecha"
+                  clearable
+                  :config="{ altInput: true, altFormat: 'd/m/Y', dateFormat: 'Y-m-d', maxDate: 'today' }"
                 />
               </VCol>
 
@@ -412,7 +488,6 @@ const submitRegister = async () => {
                   placeholder="tu@correo.com"
                 />
               </VCol>
-
               <VCol cols="6">
                 <AppTextField
                   v-model="form.password"
@@ -438,64 +513,88 @@ const submitRegister = async () => {
                 />
               </VCol>
 
+
               <VCol cols="12">
                 <h6 class="text-h6 mb-2 mt-4">
                   Ubicación
                 </h6>
               </VCol>
-
               <VCol cols="12">
                 <AppSelect
                   v-model="form.pais_id"
-                  label="País"
                   :items="paises"
-                  item-title="nombre"
-                  item-value="id"
-                  placeholder="Selecciona un país"
                   :loading="isLoadingPaises"
                   :rules="[requiredValidator]"
+                  item-title="nombre"
+                  item-value="id"
+                  label="País"
+                  placeholder="Selecciona un país"
+                  clearable
+                />
+              </VCol>
+              <VCol cols="12">
+                <AppSelect
+                  v-model="form.departamento_id"
+                  :items="departamentos"
+                  :loading="isLoadingDepartamentos"
+                  :disabled="!form.pais_id || isLoadingDepartamentos"
+                  :rules="[requiredValidator]"
+                  item-title="nombre"
+                  item-value="id"
+                  label="Departamento"
+                  placeholder="Selecciona un departamento"
+                  clearable
+                />
+              </VCol>
+              <VCol cols="12">
+                <AppSelect
+                  v-model="form.municipio_id"
+                  :items="municipios"
+                  :loading="isLoadingMunicipios"
+                  :disabled="!form.departamento_id || isLoadingMunicipios"
+                  :rules="[requiredValidator]"
+                  item-title="nombre"
+                  item-value="id"
+                  label="Municipio"
+                  placeholder="Selecciona un municipio"
                   clearable
                 />
               </VCol>
 
               <VCol cols="12">
-                <AppSelect
-                  v-model="form.departamento_id"
-                  label="Departamento"
-                  :items="departamentos"
-                  item-title="nombre"
-                  item-value="id"
-                  placeholder="Selecciona un departamento"
-                  :loading="isLoadingDepartamentos"
-                  :disabled="!form.pais_id || isLoadingDepartamentos"
-                  :rules="[requiredValidator]"
+                <VSwitch
+                  v-model="isAddingNewAldea"
+                  label="Mi aldea no está en la lista / Agregar nueva"
+                  :disabled="!form.municipio_id"
+                  color="primary"
+                  inset
+                  hide-details
+                />
+              </VCol>
+              <VCol
+                v-if="isAddingNewAldea"
+                cols="12"
+              >
+                <AppTextField
+                  v-model="newAldeaName"
+                  label="Nombre de la Nueva Aldea"
+                  placeholder="Escribe el nombre aquí"
+                  :rules="isAddingNewAldea ? [requiredValidator] : []"
+                  :disabled="!form.municipio_id"
                   clearable
                 />
               </VCol>
-
-              <VCol cols="6">
-                <AppSelect
-                  v-model="form.municipio_id"
-                  label="Municipio"
-                  :items="municipios"
-                  item-title="nombre"
-                  item-value="id"
-                  placeholder="Selecciona..."
-                  :loading="isLoadingMunicipios"
-                  :disabled="!form.departamento_id || isLoadingMunicipios"
-                  :rules="[requiredValidator]"
-                  clearable
-                />
-              </VCol>
-
-              <VCol cols="6">
+              <VCol
+                v-else
+                cols="12"
+              >
                 <AppSelect
                   v-model="form.aldea_id"
                   label="Aldea (Opcional)"
                   :items="aldeas"
                   item-title="nombre"
                   item-value="id"
-                  placeholder="Selecciona..."
+                  placeholder="Selecciona una aldea existente"
                   :loading="isLoadingAldeas"
                   :disabled="!form.municipio_id || isLoadingAldeas"
                   clearable
@@ -507,6 +606,7 @@ const submitRegister = async () => {
                   v-model="form.direccion"
                   label="Dirección Específica (Opcional)"
                   placeholder="Ej: Lote 5, Casa Azul, Zona 1"
+                  clearable
                 />
               </VCol>
 
@@ -514,19 +614,21 @@ const submitRegister = async () => {
                 <VLabel class="mb-2">
                   Foto de Perfil (Opcional)
                 </VLabel>
-                <div class="d-flex ga-2">
+                <div class="d-flex ga-2 align-center">
                   <VFileInput
                     v-model="fotoFile"
                     label="Subir archivo"
-                    accept="image/png, image/jpeg, image/jpg, image/webp"
+                    accept="image/*"
                     prepend-icon="tabler-file-upload"
                     class="flex-grow-1"
                     clearable
+                    hide-details="auto"
                   />
                   <VBtn
                     icon="tabler-camera"
                     color="primary"
                     aria-label="Tomar foto"
+                    title="Tomar foto con la cámara"
                     @click="openCamera"
                   />
                 </div>
@@ -534,33 +636,31 @@ const submitRegister = async () => {
                   v-if="fotoPreviewUrl"
                   :image="fotoPreviewUrl"
                   size="100"
-                  class="mt-4 mx-auto d-block"
+                  class="mt-4 mx-auto d-block elevation-2"
+                  rounded="lg"
                 />
               </VCol>
 
               <VCol cols="12">
-                <div class="d-flex align-center my-6">
-                  <VCheckbox
-                    id="privacy-policy"
-                    v-model="form.privacyPolicies"
-                    :rules="[requiredValidator]"
-                    inline
-                  />
-                  <VLabel
-                    for="privacy-policy"
-                    style="opacity: 1;"
-                  >
-                    <span class="me-1 text-high-emphasis">Acepto la</span>
-                    <a
-                      href="javascript:void(0)"
-                      class="text-primary"
-                    >política de privacidad y términos</a>
-                  </VLabel>
-                </div>
-
+                <VCheckbox
+                  v-model="form.privacyPolicies"
+                  :rules="[requiredValidator]"
+                  class="mt-4"
+                >
+                  <template #label>
+                    <div class="text-wrap text-body-2">
+                      Acepto la&nbsp;<a
+                        href="javascript:void(0)"
+                        class="text-primary"
+                        @click.stop
+                      >política de privacidad y términos</a>
+                    </div>
+                  </template>
+                </VCheckbox>
                 <VBtn
                   block
                   type="submit"
+                  class="mt-4"
                 >
                   Registrarse
                 </VBtn>
@@ -568,25 +668,27 @@ const submitRegister = async () => {
 
               <VCol
                 cols="12"
-                class="text-center text-base"
+                class="text-center text-base mt-4"
               >
-                <span class="d-inline-block">¿Ya tienes una cuenta?</span>
+                <span>¿Ya tienes una cuenta?</span>
                 <RouterLink
-                  class="text-primary ms-1 d-inline-block"
+                  class="text-primary ms-1"
                   :to="{ name: 'login' }"
                 >
                   Inicia sesión
                 </RouterLink>
               </VCol>
-
               <VCol
                 cols="12"
-                class="d-flex align-center"
+                class="d-flex align-center mt-4"
               >
                 <VDivider />
-                <span class="mx-4">o</span>
+                <span class="mx-4">
+                  o
+                </span>
                 <VDivider />
               </VCol>
+
               <VCol
                 cols="12"
                 class="text-center"
@@ -600,6 +702,7 @@ const submitRegister = async () => {
     </VCol>
   </VRow>
 
+
   <VDialog
     v-model="showCameraDialog"
     width="auto"
@@ -607,24 +710,28 @@ const submitRegister = async () => {
     persistent
   >
     <VCard>
-      <VCardTitle>Tomar Foto</VCardTitle>
+      <VCardTitle class="text-center">
+        Tomar Foto
+      </VCardTitle>
       <VCardText class="pa-0">
         <video
           ref="videoPlayer"
           autoplay
           playsinline
-          style="width: 100%; height: auto; transform: scaleX(-1);"
+          style="width: 100%; 
+               height: auto; 
+               transform: 
+               scaleX(-1);
+                border-radius: 
+                inherit;"
         />
       </VCardText>
       <VCardActions class="justify-center pa-4">
         <VBtn
           color="primary"
+          prepend-icon="tabler-camera"
           @click="takePhoto"
         >
-          <VIcon
-            icon="tabler-camera"
-            class="me-2"
-          />
           Capturar
         </VBtn>
         <VBtn
@@ -641,4 +748,9 @@ const submitRegister = async () => {
 
 <style lang="scss">
 @use "@core-scss/template/pages/page-auth";
+
+.auth-card-v2 .v-card {
+  overflow-y: auto;
+  max-height: 95vh;
+}
 </style>
