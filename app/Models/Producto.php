@@ -10,6 +10,11 @@ class Producto extends Model
         'precio_referencia', 'unidad_medida', 'stock_actual',
         'disponibilidad', 'estado_publicacion', 'fecha_cosecha'
     ];
+    public function user()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_id');
+    }
+
 
     public function imagenes()
     {
