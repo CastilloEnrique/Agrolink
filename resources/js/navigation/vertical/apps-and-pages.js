@@ -1,5 +1,6 @@
 export default [
   { heading: 'Apps & Pages' },
+
   // {
   //   title: 'Ecommerce',
   //   icon: { icon: 'tabler-shopping-cart' },
@@ -189,12 +190,20 @@ export default [
   //   icon: { icon: 'tabler-square' },
   //   to: 'pages-dialog-examples',
   // },
+
+  {
+    title: 'Mi Carrito',
+    to: { name: 'apps-consumidor-carrito' },
+    icon: { icon: 'tabler-shopping-cart' }, // O el ícono de tu elección
+  },
+
   {
     title: 'Catálogo de Productos',
     to: { name: 'apps-consumidor-catalogo' }, // Nombre de la ruta del archivo catalogo.vue
     icon: { icon: 'tabler-store' }, // Ícono de tienda
     // 💡 SIN PROPIEDAD 'meta' porque es de acceso público
   },
+
   {
     title: 'Mi Perfil',
     to: { name: 'apps-productor-perfil' },
