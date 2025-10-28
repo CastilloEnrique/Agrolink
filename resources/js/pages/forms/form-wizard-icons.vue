@@ -11,7 +11,7 @@ import DemoFormWizardIconsBasic from '@/views/demos/forms/form-wizard/form-wizar
 //import DemoFormWizardIconsModernBasic from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsModernBasic.vue'
 
 // eslint-disable-next-line import/no-unresolved
-import DemoFormWizardIconsValidation from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsValidation.vue'
+//import DemoFormWizardIconsValidation from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsValidation.vue'
 import DemoFormWizardIconsVertical from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsVertical.vue'
 </script>
 
@@ -35,7 +35,7 @@ import DemoFormWizardIconsVertical from '@/views/demos/forms/form-wizard/form-wi
         title="Validation"
         :code="validation"
       >
-        <DemoFormWizardIconsValidation />
+        <!--        <DemoFormWizardIconsValidation /> -->
       </AppCardCode>
     </VCol>
 
