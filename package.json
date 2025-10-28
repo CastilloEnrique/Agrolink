@@ -27,7 +27,7 @@
     "@vueuse/core": "10.11.1",
     "@vueuse/integrations": "^14.0.0",
     "@vueuse/math": "10.11.1",
-    "apexcharts": "^3.54.1",
+    "apexcharts": "^5.3.5",
     "chart.js": "4.4.9",
     "cookie-es": "1.2.2",
     "destr": "2.0.5",

@@ -1,25 +1,27 @@
 <script setup>
 // eslint-disable-next-line import/no-unresolved
-import DemoFormWizardNumberedBasic from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedBasic.vue'
+// import DemoFormWizardNumberedBasic from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedBasic.vue'
 // eslint-disable-next-line import/no-unresolved
-import DemoFormWizardNumberedModernBasic from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedModernBasic.vue'
+// import DemoFormWizardNumberedModernBasic from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedModernBasic.vue'
 // eslint-disable-next-line import/no-unresolved
-//import DemoFormWizardNumberedModernVertical from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedModernVertical.vue'
+// import DemoFormWizardNumberedModernVertical from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedModernVertical.vue'
 // eslint-disable-next-line import/no-unresolved
-import DemoFormWizardNumberedVertical from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedVertical.vue'
+//import DemoFormWizardNumberedVertical from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedVertical.vue'
 </script>
 
 <template>
   <VRow>
-    <!-- 👉 Basic -->
-    <VCol cols="12">
+    <!-- 👉 Basic (comentado porque falta el archivo) -->
+    <!--
+      <VCol cols="12">
       <AppCardCode
-        variant="outlined"
-        title="Basic"
+      variant="outlined"
+      title="Basic"
       >
-        <DemoFormWizardNumberedBasic />
+      <DemoFormWizardNumberedBasic />
       </AppCardCode>
-    </VCol>
+      </VCol>
+    -->
 
     <!-- 👉 Vertical -->
     <VCol cols="12">
@@ -27,7 +29,7 @@ import DemoFormWizardNumberedVertical from '@/views/demos/forms/form-wizard/form
         variant="outlined"
         title="Vertical"
       >
-        <DemoFormWizardNumberedVertical />
+<!--        <DemoFormWizardNumberedVertical />-->
       </AppCardCode>
     </VCol>
   </VRow>
@@ -50,13 +52,15 @@ import DemoFormWizardNumberedVertical from '@/views/demos/forms/form-wizard/form
     </VCol>
 
     <!-- 👉 Modern Basic -->
-    <VCol cols="12">
+    <!--
+      <VCol cols="12">
       <AppCardCode
-        variant="outlined"
-        title="Modern Basic"
+      variant="outlined"
+      title="Modern Basic"
       >
-        <DemoFormWizardNumberedModernBasic />
+      <DemoFormWizardNumberedModernBasic />
       </AppCardCode>
-    </VCol>
+      </VCol>
+    -->
   </VRow>
 </template>
