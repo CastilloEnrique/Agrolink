@@ -4,7 +4,7 @@ import DemoFormWizardNumberedBasic from '@/views/demos/forms/form-wizard/form-wi
 // eslint-disable-next-line import/no-unresolved
 import DemoFormWizardNumberedModernBasic from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedModernBasic.vue'
 // eslint-disable-next-line import/no-unresolved
-import DemoFormWizardNumberedModernVertical from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedModernVertical.vue'
+//import DemoFormWizardNumberedModernVertical from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedModernVertical.vue'
 // eslint-disable-next-line import/no-unresolved
 import DemoFormWizardNumberedVertical from '@/views/demos/forms/form-wizard/form-wizard-numbered/DemoFormWizardNumberedVertical.vue'
 </script>
@@ -45,7 +45,7 @@ import DemoFormWizardNumberedVertical from '@/views/demos/forms/form-wizard/form
         variant="outlined"
         title="Modern Vertical"
       >
-        <DemoFormWizardNumberedModernVertical />
+        <!--        <DemoFormWizardNumberedModernVertical /> -->
       </AppCardCode>
     </VCol>
 
