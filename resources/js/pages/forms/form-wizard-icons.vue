@@ -7,7 +7,10 @@ import {
   vertical,
 } from '@/views/demos/forms/form-wizard/form-wizard-icons/demoCodeFormWizardIcons'
 import DemoFormWizardIconsBasic from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsBasic.vue'
-import DemoFormWizardIconsModernBasic from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsModernBasic.vue'
+
+//import DemoFormWizardIconsModernBasic from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsModernBasic.vue'
+
+// eslint-disable-next-line import/no-unresolved
 import DemoFormWizardIconsValidation from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsValidation.vue'
 import DemoFormWizardIconsVertical from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsVertical.vue'
 </script>
@@ -61,7 +64,7 @@ import DemoFormWizardIconsVertical from '@/views/demos/forms/form-wizard/form-wi
         title="Modern basic"
         :code="modernBasic"
       >
-        <DemoFormWizardIconsModernBasic />
+        <!--        <DemoFormWizardIconsModernBasic /> -->
       </AppCardCode>
     </VCol>
 
