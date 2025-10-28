@@ -29,7 +29,7 @@
         variant="outlined"
         title="Vertical"
       >
-<!--        <DemoFormWizardNumberedVertical />-->
+        <!--        <DemoFormWizardNumberedVertical /> -->
       </AppCardCode>
     </VCol>
   </VRow>
