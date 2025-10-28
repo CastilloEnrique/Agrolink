@@ -6,12 +6,9 @@ import {
   validation,
   vertical,
 } from '@/views/demos/forms/form-wizard/form-wizard-icons/demoCodeFormWizardIcons'
+
+// ✅ Solo mantenemos los componentes que existen físicamente
 import DemoFormWizardIconsBasic from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsBasic.vue'
-
-//import DemoFormWizardIconsModernBasic from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsModernBasic.vue'
-
-// eslint-disable-next-line import/no-unresolved
-//import DemoFormWizardIconsValidation from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsValidation.vue'
 import DemoFormWizardIconsVertical from '@/views/demos/forms/form-wizard/form-wizard-icons/DemoFormWizardIconsVertical.vue'
 </script>
 
@@ -28,16 +25,14 @@ import DemoFormWizardIconsVertical from '@/views/demos/forms/form-wizard/form-wi
       </AppCardCode>
     </VCol>
 
-    <!-- 👉 Validation -->
-    <VCol cols="12">
-      <AppCardCode
-        variant="outlined"
-        title="Validation"
-        :code="validation"
-      >
-        <!--        <DemoFormWizardIconsValidation /> -->
+    <!-- 👉 Validation (removido porque el componente no existe) -->
+    <!--
+      <VCol cols="12">
+      <AppCardCode variant="outlined" title="Validation" :code="validation">
+      <DemoFormWizardIconsValidation />
       </AppCardCode>
-    </VCol>
+      </VCol>
+    -->
 
     <!-- 👉 Vertical -->
     <VCol cols="12">
@@ -52,31 +47,28 @@ import DemoFormWizardIconsVertical from '@/views/demos/forms/form-wizard/form-wi
   </VRow>
 
   <VDivider class="my-10 mx-n6" />
+
   <h3 class="text-h3 my-4">
     Modern
   </h3>
 
   <VRow>
-    <!-- 👉 Modern Basic -->
-    <VCol cols="12">
-      <AppCardCode
-        variant="outlined"
-        title="Modern basic"
-        :code="modernBasic"
-      >
-        <!--        <DemoFormWizardIconsModernBasic /> -->
+    <!-- 👉 Modern Basic (removido porque el componente no existe) -->
+    <!--
+      <VCol cols="12">
+      <AppCardCode variant="outlined" title="Modern Basic" :code="modernBasic">
+      <DemoFormWizardIconsModernBasic />
       </AppCardCode>
-    </VCol>
+      </VCol>
+    -->
 
-    <!-- 👉 Modern Vertical -->
-    <VCol cols="12">
-      <AppCardCode
-        variant="outlined"
-        title="Modern Vertical"
-        :code="modernVertical"
-      >
-        <DemoFormWizardIconsModernVertical />
+    <!-- 👉 Modern Vertical (removido porque el componente no existe) -->
+    <!--
+      <VCol cols="12">
+      <AppCardCode variant="outlined" title="Modern Vertical" :code="modernVertical">
+      <DemoFormWizardIconsModernVertical />
       </AppCardCode>
-    </VCol>
+      </VCol>
+    -->
   </VRow>
 </template>
