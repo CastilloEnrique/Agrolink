@@ -235,7 +235,7 @@ use App\Models\PerfilProductor;
 use App\Models\Producto;
 use App\Models\ImagenProducto;
 use App\Models\CategoriaProducto;
-use App\Models\User;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -493,7 +493,7 @@ class ProductorController extends Controller
         $productos = Producto::where('usuario_id', $user->id)->with('categoria:id,nombre')->get();
 
         // 1. Generar contenido HTML válido
-        $html = '<!DOCTYPE html><html><head><style>
+        $html = '<!DOCTYPE html><html lang=""><head><style>
                     body { font-family: sans-serif; }
                     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }

@@ -314,7 +314,11 @@ const submitRegister = async () => {
     localStorage.setItem('usuario', JSON.stringify(usuario))
     useCookie('accessToken').value = accessToken
     useCookie('userData').value = usuario
-    router.push({ name: 'apps-ecommerce-dashboard' })
+
+    // Poner la bandera para que el layout muestre la bienvenida
+    localStorage.setItem('showWelcomeNotification', 'true')
+
+    router.push({ name: 'inicio' })
 
   } catch (error) {
     // Manejar errores

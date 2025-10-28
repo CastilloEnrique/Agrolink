@@ -190,7 +190,15 @@ export default [
   //   icon: { icon: 'tabler-square' },
   //   to: 'pages-dialog-examples',
   // },
-
+  {
+    title: 'Inicio',
+    to: { name: 'inicio' }, // Apunta al nombre de tu archivo inicio.vue
+    icon: { icon: 'tabler-smart-home' }, // Icono de "casa inteligente" o "inicio"
+    meta: {
+      // Asumiendo que esta es una ruta protegida
+      requiresAuth: true,
+    },
+  },
   {
     title: 'Mi Carrito',
     to: { name: 'apps-consumidor-carrito' },
