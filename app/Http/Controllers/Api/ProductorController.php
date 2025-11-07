@@ -241,8 +241,12 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Facades\Response; // 💡 Nuevo Import para PDF/Descarga limpia
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class ProductorController extends Controller
 {
@@ -442,29 +446,6 @@ class ProductorController extends Controller
     }
 
 
-    protected function getProductosDataForExport($user)
-    {
-        $productos = Producto::where('usuario_id', $user->id)
-            ->with('categoria:id,nombre')
-            ->get();
-
-        // Agregar BOM (Byte Order Mark) para asegurar que Excel reconozca UTF-8
-        $csv = "\xEF\xBB\xBF";
-        $csv .= "Nombre Producto,Categoría,Precio Ref (Q),Stock,Unidad,Estado\n";
-
-        foreach ($productos as $producto) {
-            $csv .= sprintf(
-                "\"%s\",\"%s\",%.2f,%d,\"%s\",\"%s\"\n",
-                str_replace('"', '""', $producto->nombre),
-                $producto->categoria->nombre ?? 'N/A',
-                $producto->precio_referencia,
-                $producto->stock_actual,
-                $producto->unidad_medida,
-                str_replace('_', ' ', $producto->estado_publicacion)
-            );
-        }
-        return $csv;
-    }
 
     /**
      * Descarga CSV (Excel).
@@ -472,61 +453,105 @@ class ProductorController extends Controller
     public function exportToExcel(Request $request)
     {
         $user = $request->user();
-        $csvContent = $this->getProductosDataForExport($user);
-        $filename = 'Mis_Productos_Agrolink_' . date('Ymd_His') . '.csv';
+        $productos = Producto::where('usuario_id', $user->id)
+            ->with('categoria:id,nombre', 'imagenes')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        // 💡 CAMBIO: Usamos response()->make para asegurar la descarga del contenido sin archivos temporales
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
+        // Crear libro y hoja
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Mis Productos');
 
-        return Response::make($csvContent, 200, $headers);
+        // Encabezados (coinciden con la DataTable)
+        $headers = ['Producto', 'Categoría', 'Estado', 'Precio (Q)', 'Stock', 'Unidad'];
+        $sheet->fromArray($headers, NULL, 'A1');
+
+        // Contenido
+        $row = 2;
+        foreach ($productos as $producto) {
+            $sheet->setCellValue('A' . $row, $producto->nombre);
+            $sheet->setCellValue('B' . $row, $producto->categoria->nombre ?? 'N/A');
+            $sheet->setCellValue('C' . $row, ucfirst(str_replace('_', ' ', $producto->estado_publicacion)));
+            $sheet->setCellValue('D' . $row, $producto->precio_referencia);
+            $sheet->setCellValue('E' . $row, $producto->stock_actual);
+            $sheet->setCellValue('F' . $row, $producto->unidad_medida);
+            $row++;
+        }
+
+        // Descargar archivo
+        $filename = 'Mis_Productos_' . date('Ymd_His') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+
+        ob_start();
+        $writer->save('php://output');
+        $excelOutput = ob_get_clean();
+
+        return response($excelOutput, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ]);
     }
 
     /**
      * Simula la generación y descarga de un reporte en PDF (HTML simple).
      */
+
     public function exportToPdf(Request $request)
     {
         $user = $request->user();
-        $productos = Producto::where('usuario_id', $user->id)->with('categoria:id,nombre')->get();
+        $productos = Producto::where('usuario_id', $user->id)
+            ->with('categoria:id,nombre')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        // 1. Generar contenido HTML válido
-        $html = '<!DOCTYPE html><html lang=""><head><style>
-                    body { font-family: sans-serif; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-                    th { background-color: #f2f2f2; }
-                    .header { background-color: #4CAF50; color: white; padding: 15px; text-align: center; font-size: 20px;}
-                </style></head><body>';
-        $html .= '<div class="header">Reporte de Productos - Agrolink</div>';
-        $html .= '<p>Generado por: ' . htmlspecialchars($user->primer_nombre . ' ' . $user->primer_apellido) . '</p>';
-        $html .= '<p>Fecha de Generación: ' . date('Y-m-d H:i:s') . '</p>';
-        $html .= '<table><thead><tr><th>Producto</th><th>Categoría</th><th>Precio (Q)</th><th>Stock</th><th>Estado</th></tr></thead><tbody>';
+        // HTML simple basado en las columnas visibles
+        $html = '
+    <h2 style="text-align:center;">Reporte de Productos - Agrolink</h2>
+    <p><strong>Usuario:</strong> ' . htmlspecialchars($user->primer_nombre . ' ' . $user->primer_apellido) . '</p>
+    <p><strong>Fecha:</strong> ' . date('Y-m-d H:i') . '</p>
+    <table border="1" cellspacing="0" cellpadding="5" width="100%">
+        <thead>
+            <tr style="background:#f2f2f2;">
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Estado</th>
+                <th>Precio (Q)</th>
+                <th>Stock</th>
+                <th>Unidad</th>
+            </tr>
+        </thead>
+        <tbody>';
 
         foreach ($productos as $producto) {
-            $html .= '<tr>';
-            $html .= '<td>' . htmlspecialchars($producto->nombre) . '</td>';
-            $html .= '<td>' . htmlspecialchars($producto->categoria->nombre ?? 'N/A') . '</td>';
-            $html .= '<td>Q' . number_format($producto->precio_referencia, 2) . '</td>';
-            $html .= '<td>' . $producto->stock_actual . ' ' . htmlspecialchars($producto->unidad_medida) . '</td>';
-            $html .= '<td>' . htmlspecialchars(str_replace('_', ' ', $producto->estado_publicacion)) . '</td>';
-            $html .= '</tr>';
+            $html .= '
+        <tr>
+            <td>' . htmlspecialchars($producto->nombre) . '</td>
+            <td>' . htmlspecialchars($producto->categoria->nombre ?? 'N/A') . '</td>
+            <td>' . ucfirst(str_replace('_', ' ', $producto->estado_publicacion)) . '</td>
+            <td>Q' . number_format($producto->precio_referencia, 2) . '</td>
+            <td>' . $producto->stock_actual . '</td>
+            <td>' . htmlspecialchars($producto->unidad_medida) . '</td>
+        </tr>';
         }
-        $html .= '</tbody></table></body></html>';
 
-        $filename = 'Productos_Agrolink_' . date('Ymd_His') . '.html'; // 💡 CAMBIADO A .html
+        $html .= '</tbody></table>';
 
-        // Devolver una respuesta de descarga HTML
-        return Response::stream(function () use ($html) {
-            echo $html;
-        }, 200, [
-            'Content-Type' => 'text/html; charset=UTF-8', // 💡 CAMBIADO A TEXT/HTML
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        // Configurar Dompdf
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // Descargar
+        $filename = 'Mis_Productos_' . date('Ymd_His') . '.pdf';
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
         ]);
     }
-
 
     // --- FUNCIÓN QUE YA TENÍAS ---
     public function getPerfilCompleto(Request $request)

@@ -6,11 +6,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\Api\PedidoController;
 
 // --- RUTAS PÚBLICAS ---
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+// en routes/api.php
 
+// ... (tus otras rutas de login/register)
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 // --- RUTAS DE GEOGRAFÍA (PÚBLICAS) ---
 Route::get('/paises', [GeografiaController::class, 'getPaises']);
 Route::get('/departamentos/{paisId}', [GeografiaController::class, 'getDepartamentos']);
@@ -28,6 +33,10 @@ Route::get('/catalogo/{id}', [ProductorController::class, 'getProductByIdPublic'
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/usuario/perfil', [UsuarioController::class, 'perfil']);
+
+    // RUTA PARA PEDIDOS
+        Route::post('/pedidos', [PedidoController::class, 'store']);
+
 
     // Perfil Completo
     Route::get('/productor/perfil-completo', [ProductorController::class, 'getPerfilCompleto']);

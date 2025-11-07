@@ -105,13 +105,22 @@ return [
     */
 
     'passwords' => [
-        'users' => [
-            'provider' => 'users',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
-            'throttle' => 60,
-        ],
+//        'users' => [
+//            'provider' => 'users',
+//            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+//            'expire' => 60,
+//            'throttle' => 60,
+//        ],
+
+    // 👇 NUEVO broker para tu tabla `usuarios`
+    'usuarios' => [
+        'provider' => 'users', // usa el provider que apunta a App\Models\Usuario
+        'table' => 'password_reset_tokens',
+        'expire' => 60,
+        'throttle' => 60,
     ],
+],
+
 
     /*
     |--------------------------------------------------------------------------

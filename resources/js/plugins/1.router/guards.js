@@ -106,6 +106,7 @@
 //     return next()
 //   })
 // }
+
 import { canNavigate } from '@layouts/plugins/casl'
 
 // Helper simple para leer cookies
@@ -122,7 +123,7 @@ function readCookie(name) {
       return cookieValue
     }
   }
-  
+
   return null
 }
 
@@ -131,14 +132,14 @@ export const setupGuards = router => {
     // Intenta obtener token de localStorage o cookie
     const token = localStorage.getItem('token') || readCookie('accessToken')
     const isPublicRoute = to.meta.public || to.meta.layout === 'blank' // Rutas que no requieren login
-    const isAuthRoute = ['login', 'register', 'forgot-password'].includes(to.name) // Rutas de autenticación
+    const isAuthRoute = ['login', 'register', 'forgot-password', 'reset-password'].includes(to.name) // Rutas de autenticación
 
     // --- LÓGICA DE REDIRECCIÓN CORREGIDA ---
 
     // 1. Si NO hay token e intenta ir a una ruta que NO es pública/auth => A LOGIN
     if (!token && !isPublicRoute && !isAuthRoute) {
       console.log('Guard: No token, redirecting to login from protected route:', to.fullPath)
-      
+
       return next({
         name: 'login',
         query: { to: to.fullPath !== '/' ? to.path : undefined },
@@ -147,15 +148,21 @@ export const setupGuards = router => {
 
     // 2. Si HAY token E intenta ir a una ruta de autenticación (login/register) => AL NUEVO DASHBOARD 'inicio'
     if (token && isAuthRoute) {
+      // Excepción: Permite a los usuarios con token ver /reset-password si vienen del enlace de correo
+      // (Esto es opcional, pero previene que un usuario logueado en otra pestaña no pueda resetear)
+      if(to.name === 'reset-password') {
+        return next()
+      }
+
       console.log('Guard: Token exists, redirecting from auth page to inicio')
-      
+
       return next({ name: 'inicio' }) // <--- CORRECCIÓN AQUÍ
     }
 
     // 3. Si HAY token Y la ruta destino es el DASHBOARD 'inicio': Permitir acceso directo
     if (token && to.name === 'inicio') { // <--- CORRECCIÓN AQUÍ
       console.log('Guard: Accessing new dashboard (inicio), allowed.')
-      
+
       return next()
     }
 
@@ -165,18 +172,18 @@ export const setupGuards = router => {
         // Asegúrate que canNavigate esté bien configurado en tu proyecto
         if (canNavigate(to)) {
           console.log('Guard: CASL allows access to', to.fullPath)
-          
+
           return next() // Tiene permiso
         } else {
           // No tiene permiso
           console.warn('Guard: CASL DENIED access to:', to.fullPath)
-          
+
           return next({ name: 'not-authorized' })
         }
       } catch (err) {
         // Si CASL falla, permitir acceso temporal (pero loguear)
         console.error('Guard: CASL check failed, allowing temporary access:', err, 'Route:', to.fullPath)
-        
+
         return next()
       }
     }
@@ -184,8 +191,94 @@ export const setupGuards = router => {
     // 5. Caso por defecto (rutas públicas si no hay token, etc.)
     // Si llegamos aquí, es probablemente una ruta pública o el usuario no tiene token
     console.log('Guard: Default case (likely public or no token), allowing navigation to:', to.fullPath)
-    
+
     return next()
   })
 }
+
+
+
+
+// import { canNavigate } from '@layouts/plugins/casl'
+//
+// // Helper simple para leer cookies
+// function readCookie(name) {
+//   const value = `; ${document.cookie}`
+//   const parts = value.split(`; ${name}=`)
+//   if (parts.length === 2) {
+//     const cookieValue = parts.pop().split(';').shift()
+//     try {
+//       // Intentar decodificar si está codificado como URI component
+//       return decodeURIComponent(cookieValue)
+//     } catch (e) {
+//       // Si falla la decodificación, devolver el valor crudo
+//       return cookieValue
+//     }
+//   }
+//
+//   return null
+// }
+//
+// export const setupGuards = router => {
+//   router.beforeEach(async (to, from, next) => {
+//     // Intenta obtener token de localStorage o cookie
+//     const token = localStorage.getItem('token') || readCookie('accessToken')
+//     const isPublicRoute = to.meta.public || to.meta.layout === 'blank' // Rutas que no requieren login
+//     const isAuthRoute = ['login', 'register', 'forgot-password'].includes(to.name) // Rutas de autenticación
+//
+//     // --- LÓGICA DE REDIRECCIÓN CORREGIDA ---
+//
+//     // 1. Si NO hay token e intenta ir a una ruta que NO es pública/auth => A LOGIN
+//     if (!token && !isPublicRoute && !isAuthRoute) {
+//       console.log('Guard: No token, redirecting to login from protected route:', to.fullPath)
+//
+//       return next({
+//         name: 'login',
+//         query: { to: to.fullPath !== '/' ? to.path : undefined },
+//       })
+//     }
+//
+//     // 2. Si HAY token E intenta ir a una ruta de autenticación (login/register) => AL NUEVO DASHBOARD 'inicio'
+//     if (token && isAuthRoute) {
+//       console.log('Guard: Token exists, redirecting from auth page to inicio')
+//
+//       return next({ name: 'inicio' }) // <--- CORRECCIÓN AQUÍ
+//     }
+//
+//     // 3. Si HAY token Y la ruta destino es el DASHBOARD 'inicio': Permitir acceso directo
+//     if (token && to.name === 'inicio') { // <--- CORRECCIÓN AQUÍ
+//       console.log('Guard: Accessing new dashboard (inicio), allowed.')
+//
+//       return next()
+//     }
+//
+//     // 4. Si HAY token, NO es 'inicio', NO es pública/auth => Verificar Permisos (CASL)
+//     if (token && !isPublicRoute && !isAuthRoute && to.name !== 'inicio') { // <--- CORRECCIÓN AQUÍ
+//       try {
+//         // Asegúrate que canNavigate esté bien configurado en tu proyecto
+//         if (canNavigate(to)) {
+//           console.log('Guard: CASL allows access to', to.fullPath)
+//
+//           return next() // Tiene permiso
+//         } else {
+//           // No tiene permiso
+//           console.warn('Guard: CASL DENIED access to:', to.fullPath)
+//
+//           return next({ name: 'not-authorized' })
+//         }
+//       } catch (err) {
+//         // Si CASL falla, permitir acceso temporal (pero loguear)
+//         console.error('Guard: CASL check failed, allowing temporary access:', err, 'Route:', to.fullPath)
+//
+//         return next()
+//       }
+//     }
+//
+//     // 5. Caso por defecto (rutas públicas si no hay token, etc.)
+//     // Si llegamos aquí, es probablemente una ruta pública o el usuario no tiene token
+//     console.log('Guard: Default case (likely public or no token), allowing navigation to:', to.fullPath)
+//
+//     return next()
+//   })
+// }
 
