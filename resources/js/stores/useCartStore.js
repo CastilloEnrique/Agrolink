@@ -1,81 +1,193 @@
+// import { defineStore } from 'pinia'
+// import api from '@/services/axios'
+//
+// export const useCartStore = defineStore('cart', {
+//   state: () => ({
+//     cartItems: [],
+//   }),
+//
+//   getters: {
+//     cartItemCount: state => state.cartItems.length,
+//
+//     cartTotal: state =>
+//       state.cartItems.reduce(
+//         (t, p) => t + (p.price * p.quantity),
+//         0,
+//       ),
+//   },
+//
+//   actions: {
+//     // 🔵 Obtener carrito del backend
+//     // async fetchCart() {
+//     //   const res = await api.get('/carrito')
+//     //
+//     //   this.cartItems = Object.values(res.data.items || [])
+//     // },
+//     async fetchCart() {
+//       const res = await api.get('/carrito')
+//
+//       this.cartItems = Object.values(res.data.items || []).map(item => ({
+//         id: item.id,
+//         name: item.nombre,
+//         price: Number(item.precio),     // ← BACKEND ENVÍA "precio"
+//         // eslint-disable-next-line camelcase
+//         image_url: item.image,          // ← BACKEND ENVÍA "image"
+//         producer: item.productor,
+//         quantity: item.cantidad,
+//         subtotal: Number(item.precio) * Number(item.cantidad),
+//       }))
+//     },
+//
+//
+//
+//     // 🟢 Agregar producto
+//     async addToCart(productId, quantity = 1) {
+//       await api.post('/carrito/agregar', {
+//         // eslint-disable-next-line camelcase
+//         producto_id: Number(productId),   //  🔥 ARREGLA EL ERROR
+//         cantidad: Number(quantity),
+//       })
+//       await this.fetchCart()
+//     },
+//
+//     // async addToCart(productId, quantity = 1) {
+//     //   await api.post('/carrito/agregar', {
+//     //     // eslint-disable-next-line camelcase
+//     //     producto_id: productId,
+//     //     cantidad: quantity,
+//     //   })
+//     //   await this.fetchCart()
+//     // },
+//
+//     // 🟡 Actualizar cantidad
+//     async updateQuantity(productId, quantity) {
+//       await api.put('/carrito/actualizar-cantidad', {
+//         // eslint-disable-next-line camelcase
+//         producto_id: productId,
+//         cantidad: quantity,
+//       })
+//       await this.fetchCart()
+//     },
+//
+//     // 🔴 Eliminar
+//     async removeFromCart(productId) {
+//       await api.delete('/carrito/eliminar', {
+//         // eslint-disable-next-line camelcase
+//         data: { producto_id: productId },
+//       })
+//       await this.fetchCart()
+//     },
+//
+//     // ⚪ Limpiar (solo UI)
+//     clearCart() {
+//       this.cartItems = []
+//     },
+//   },
+// })
+
+
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import api from '@/services/axios'
 
-export const useCartStore = defineStore('cart', () => {
-  // 💡 Estado: El carrito cargado desde localStorage o vacío
-  const items = ref(JSON.parse(localStorage.getItem('agrolink_cart') || '[]'))
+export const useCartStore = defineStore('cart', {
+  state: () => ({
+    items: [],
+  }),
 
-  // 💡 Getters
-  const cartItemCount = computed(() => items.value.length)
+  getters: {
+    cartItems: state => state.items,
 
-  const cartItems = computed(() => {
-    // Calcula los subtotales para la vista
-    return items.value.map(item => ({
-      ...item,
-      subtotal: item.price * item.quantity,
-    }))
-  })
+    // Suma la cantidad total de items
+    cartItemCount: state => state.items.reduce((sum, i) => sum + i.quantity, 0),
 
-  const cartTotal = computed(() => {
-    return cartItems.value.reduce((total, item) => total + item.subtotal, 0)
-  })
+    // Suma el subtotal que ya calculó el backend
+    cartTotal: state => state.items.reduce((sum, i) => sum + i.subtotal, 0),
+  },
 
-  // 💡 Actions: Persistencia y Modificación
-  const saveCartToStorage = () => {
-    localStorage.setItem('agrolink_cart', JSON.stringify(items.value))
-  }
+  actions: {
+    /**
+     * ✅ Carga el carrito desde el Backend (AHORA USA LA TABLA NUEVA)
+     */
+    async fetchCart() {
+      try {
+        const res = await api.get('/carrito')
 
-  const addToCart = (product, quantity = 1) => {
-    const existingItem = items.value.find(item => item.id === product.id)
 
-    if (existingItem) {
-      existingItem.quantity += quantity
-    } else {
-      items.value.push({
-        id: product.id,
-        name: product.nombre,
-        producer: product.productor,
-        // eslint-disable-next-line camelcase
-        producer_id: product.productor_id,
-        price: product.precio_referencia,
-        unit: product.unidad_medida,
-        // eslint-disable-next-line camelcase
-        image_url: product.imagen_url,
-        quantity: quantity,
-      })
-    }
-    saveCartToStorage()
-  }
+        // El backend ya devuelve los datos formateados y listos
+        this.items = res.data.items
+      } catch (e) {
+        console.error("Error al cargar el carrito", e)
+        this.items = [] // Limpiar en caso de error
+      }
+    },
 
-  const updateQuantity = (id, newQuantity) => {
-    const item = items.value.find(item => item.id === id)
-    if (item && newQuantity > 0) {
-      item.quantity = newQuantity
-      saveCartToStorage()
-    } else if (item && newQuantity <= 0) {
-      // Si la cantidad es cero o menos, eliminar
-      removeFromCart(id)
-    }
-  }
+    /**
+     * ✅ Agrega un item llamando al Backend
+     */
+    async addToCart(productId, qty) {
+      try {
+        await api.post('/carrito/agregar', {
+          // eslint-disable-next-line camelcase
+          producto_id: Number(productId),
+          cantidad: Number(qty),
+        })
 
-  const removeFromCart = id => {
-    items.value = items.value.filter(item => item.id !== id)
-    saveCartToStorage()
-  }
+        // Después de agregar, volvemos a cargar todo el carrito desde la BD
+        await this.fetchCart()
+      } catch (e) {
+        console.error("Error al agregar al carrito", e)
+        alert("Error al agregar producto: " + (e.response?.data?.message || 'Error desconocido'))
+      }
+    },
 
-  const clearCart = () => {
-    items.value = []
-    saveCartToStorage()
-  }
+    /**
+     * ✅ Actualiza la cantidad (llamando al Backend)
+     */
+    async updateQuantity(productId, qty) {
+      // 'productId' es el ID del PRODUCTO
+      try {
+        await api.put('/carrito/actualizar-cantidad', {
+          // eslint-disable-next-line camelcase
+          producto_id: productId,
+          cantidad: qty,
+        })
 
-  return {
-    items,
-    cartItemCount,
-    cartItems,
-    cartTotal,
-    addToCart,
-    updateQuantity,
-    removeFromCart,
-    clearCart,
-  }
+        // Actualizamos el estado local para respuesta rápida
+        const item = this.items.find(i => i.id === productId)
+        if (item) {
+          item.quantity = qty
+          item.subtotal = qty * item.price
+        }
+      } catch (e) {
+        console.error("Error al actualizar cantidad", e)
+        await this.fetchCart() // Recargar todo si falla
+      }
+    },
+
+    /**
+     * ✅ Elimina un item llamando al Backend
+     */
+    async removeFromCart(productId) {
+      // 'productId' es el ID del PRODUCTO
+      try {
+        this.items = this.items.filter(i => i.id !== productId) // Optimista
+        await api.delete('/carrito/eliminar', {
+          // eslint-disable-next-line camelcase
+          data: { producto_id: productId },
+        })
+      } catch (e) {
+        console.error("Error al eliminar del carrito", e)
+        await this.fetchCart() // Revertir si falla
+      }
+    },
+
+    /**
+     * ⚪ Limpia el carrito (solo local)
+     */
+    clearCart() {
+      // Opcional: podrías llamar a un endpoint /carrito/limpiar
+      // que haga CarritoItem::where('usuario_id', auth()->id())->delete();
+      this.items = []
+    },
+  },
 })

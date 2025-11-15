@@ -204,11 +204,16 @@ export default [
     to: { name: 'apps-consumidor-carrito' },
     icon: { icon: 'tabler-shopping-cart' }, // O el ícono de tu elección
   },
+  {
+    title: 'Mis Pedidos',
+    to: { name: 'apps-consumidor-mis-pedidos' },
+    icon: { icon: 'tabler-history' },
+  },
 
   {
     title: 'Catálogo de Productos',
     to: { name: 'apps-consumidor-catalogo' }, // Nombre de la ruta del archivo catalogo.vue
-    icon: { icon: 'tabler-store' }, // Ícono de tienda
+    icon: { icon: 'tabler:store' }, // Ícono de tienda
     // 💡 SIN PROPIEDAD 'meta' porque es de acceso público
   },
 
@@ -220,6 +225,16 @@ export default [
       action: 'manage',
       subject: 'Productor-Perfil',
     },
+  },
+  {
+    title: 'Ajustes de Cuenta',
+    to: { name: 'account-settings' }, // ✅ CORREGIDO (apunta a tu nuevo archivo)
+    icon: { icon: 'tabler-user-circle' },
+  },
+  {
+    title: 'Pedidos Recibidos',
+    to: { name: 'apps-productor-pedidos-recibidos' }, // El 'name' se basa en el nombre del archivo
+    icon: { icon: 'tabler-inbox' },
   },
 
   {
@@ -240,4 +255,30 @@ export default [
       subject: 'Productor-Productos', // Debe coincidir con el 'subject' en mis-productos.vue
     },
   },
+
+  {
+    title: 'Revisión de Productos',
+    to: { name: 'apps-admin-revision-productos' }, // El 'name' se basa en la ruta
+    icon: { icon: 'tabler-shield-check' },
+    meta: {
+      subject: 'Admin', // 💡 Para que solo lo vean los admins
+      action: 'manage',
+    },
+  },
+  {
+    title: 'Gestión de Usuarios',
+    to: { name: 'apps-admin-gestion-usuarios' }, // El nombre se basa en la ruta del archivo
+    icon: { icon: 'tabler-users' },
+    meta: {
+      subject: 'Admin', // Para que solo admins vean este enlace
+      action: 'manage',
+    },
+  },
+  {
+    title: 'Historial de Pedidos',
+    to: { name: 'apps-admin-revision-pedidos' }, // ✅ CORREGIDO
+    icon: { icon: 'tabler-file-invoice' },
+    meta: { subject: 'Admin', action: 'manage' },
+  },
+
 ]

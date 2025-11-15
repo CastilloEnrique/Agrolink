@@ -302,6 +302,30 @@ class Usuario extends Authenticatable implements CanResetPasswordContract
         return $this->belongsToMany(Rol::class, 'rol_usuario', 'usuario_id', 'rol_id');
     }
     /**
+     * Verifica si el usuario tiene un rol específico.
+     */
+    public function tieneRol($nombreRol)
+    {
+        return $this->roles->contains('nombre', $nombreRol);
+    }
+    /**
+     * Un usuario (consumidor) tiene muchos pedidos.
+     */
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class, 'usuario_id');
+    }
+
+
+    /**
+     * Un usuario (productor) tiene muchos productos.
+     */
+    public function productos()
+    {
+        return $this->hasMany(Producto::class, 'usuario_id');
+    }
+
+    /**
      * ⚙️ Laravel espera un campo 'email', pero nosotros tenemos 'correo'
      */
     public function getEmailAttribute()
@@ -335,6 +359,10 @@ class Usuario extends Authenticatable implements CanResetPasswordContract
         // Le decimos a Laravel que use NUESTRA notificación personalizada
         // en lugar de la que viene por defecto
         $this->notify(new CustomResetPasswordNotification($token));
+    }
+    public function carritoItems()
+    {
+        return $this->hasMany(CarritoItem::class, 'usuario_id');
     }
 }
 

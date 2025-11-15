@@ -1,245 +1,239 @@
-<!-- <script setup> -->
-<!-- import { ref, onMounted } from 'vue' -->
-<!-- import { useRouter } from 'vue-router' -->
-
-<!-- // Define la página y sus permisos si son necesarios -->
-<!-- definePage({ -->
-<!--  meta: { -->
-<!--    // Si esta página requiere que el usuario esté logueado: -->
-<!--    requiresAuth: true, -->
-<!--    layout: 'default', // Usa el layout principal -->
-<!--    // Puedes añadir reglas CASL si aplican a esta página específica -->
-<!--    // action: 'read', -->
-<!--    // subject: 'Dashboard', -->
-<!--  }, -->
-<!-- }) -->
-
-<!-- // (Asumiendo que guardas los datos del usuario en localStorage al hacer login) -->
-<!-- const userData = ref(JSON.parse(localStorage.getItem('userData') || '{}')) -->
-<!-- const router = useRouter() // Inicializar router -->
-
-<!-- // Estado para los precios (simulado) -->
-<!-- const precios = ref({ -->
-<!--  cafe: { nombre: 'Café (Quintal)', precio: 'Consultando...', icono: 'tabler-coffee' }, -->
-<!--  frijol: { nombre: 'Frijol (Quintal)', precio: 'Consultando...', icono: 'tabler-leaf' }, -->
-<!--  maiz: { nombre: 'Maíz (Quintal)', precio: 'Consultando...', icono: 'tabler-corn' }, -->
-<!-- }) -->
-
-<!-- // -&#45;&#45; Lógica para obtener precios (Simulada con API Gemini) -&#45;&#45; -->
-<!-- const fetchPrecios = async () => { -->
-<!--  const apiKey = "" -->
-<!--  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}` -->
-
-<!--  // Helper function con reintentos -->
-<!--  const fetchWithRetry = async (productName, retries = 3, delay = 1000) => { -->
-<!--    const userQuery = `Cuál es el precio actual de referencia por quintal de ${productName} en Guatemala hoy? Responde solo el precio aproximado en Quetzales (ej: Q350.00). Si no lo sabes, di 'No disponible'.` -->
-
-<!--    const payload = { -->
-<!--      contents: [{ parts: [{ text: userQuery }] }], -->
-<!--      tools: [{ "google_search": {} }], -->
-<!--      systemInstruction: { parts: [{ text: "Proporciona solo el precio o 'No disponible'." }] }, -->
-<!--    } -->
-
-<!--    for (let i = 0; i < retries; i++) { -->
-<!--      try { -->
-<!--        const response = await fetch(apiUrl, { -->
-<!--          method: 'POST', -->
-<!--          headers: { 'Content-Type': 'application/json' }, -->
-<!--          body: JSON.stringify(payload), -->
-<!--        }) -->
-
-<!--        if (!response.ok) { -->
-<!--          if (response.status === 429 && i < retries - 1) { -->
-<!--            console.warn(`Throttled fetching price for ${productName}, retrying in ${delay / 1000}s...`) -->
-<!--            await new Promise(resolve => setTimeout(resolve, delay)) -->
-<!--            delay *= 2 -->
-<!--            continue -->
-<!--          } -->
-<!--          throw new Error(`HTTP error! status: ${response.status}`) -->
-<!--        } -->
-
-<!--        const result = await response.json() -->
-<!--        const text = result.candidates?.[0]?.content?.parts?.[0]?.text -->
-<!--        const priceMatch = text?.match(/Q\s?[\d,]+\.\d{2}/) -->
-
-<!--        // Devolver precio si se encuentra, o el texto si no, o 'No disponible' -->
-<!--        return priceMatch ? priceMatch[0] : (text || 'No disponible') -->
-
-<!--      } catch (error) { -->
-<!--        console.error(`Error fetching price for ${productName} (attempt ${i + 1}):`, error) -->
-
-<!--        // Si es el último intento, devolver error -->
-<!--        if (i === retries - 1) return 'Error al consultar' -->
-
-<!--        // Esperar antes del siguiente reintento -->
-<!--        await new Promise(resolve => setTimeout(resolve, delay)) -->
-<!--        delay *= 2 -->
-<!--      } -->
-<!--    } -->
-<!--    -->
-<!--    return 'Error al consultar' -->
-<!--  } -->
-
-<!--  precios.value.cafe.precio = await fetchWithRetry('café pergamino') -->
-<!--  precios.value.frijol.precio = await fetchWithRetry('frijol negro') -->
-<!--  precios.value.maiz.precio = await fetchWithRetry('maíz blanco') -->
-<!-- } -->
-
-
-<!-- onMounted(() => { -->
-<!--  fetchPrecios() -->
-<!-- }) -->
-
-<!-- // -&#45;&#45; Funciones de Navegación -&#45;&#45; -->
-<!-- const goToCatalog = () => router.push({ path: '/apps/consumidor/catalogo' }) -->
-<!-- const goToMyProducts = () => router.push({ path: '/apps/productor/mis-productos' }) -->
-<!-- const goToPublish = () => router.push({ path: '/apps/productor/publicar' }) -->
-<!-- </script> -->
-
-<!-- <template> -->
-<!--  <div> -->
-<!--    &lt;!&ndash; Saludo al Usuario &ndash;&gt; -->
-<!--    <VCard class="mb-6"> -->
-<!--      <VCardText> -->
-<!--        <h3 class="text-h3"> -->
-<!--          ¡Bienvenido/a, {{ userData.primer_nombre || 'Usuario' }}! 👋 -->
-<!--        </h3> -->
-<!--        <p class="text-body-1"> -->
-<!--          Aquí tienes un resumen rápido de los precios de referencia hoy. -->
-<!--        </p> -->
-<!--      </VCardText> -->
-<!--    </VCard> -->
-
-<!--    &lt;!&ndash; Sección de Precios &ndash;&gt; -->
-<!--    <VRow> -->
-<!--      <VCol -->
-<!--        v-for="(item, key) in precios" -->
-<!--        :key="key" -->
-<!--        cols="12" -->
-<!--        md="4" -->
-<!--      > -->
-<!--        <VCard elevation="2"> -->
-<!--          <VCardText class="d-flex align-center gap-4"> -->
-<!--            <VAvatar -->
-<!--              :icon="item.icono" -->
-<!--              color="primary" -->
-<!--              variant="tonal" -->
-<!--              size="40" -->
-<!--              rounded -->
-<!--            /> -->
-<!--            <div> -->
-<!--              <span class="text-caption">{{ item.nombre }}</span> -->
-<!--              <h5 class="text-h5"> -->
-<!--                {{ item.precio }} -->
-<!--              </h5> -->
-<!--            </div> -->
-<!--          </VCardText> -->
-<!--        </VCard> -->
-<!--      </VCol> -->
-<!--    </VRow> -->
-
-<!--    &lt;!&ndash; Accesos Rápidos &ndash;&gt; -->
-<!--    <VRow class="mt-6"> -->
-<!--      <VCol cols="12"> -->
-<!--        <h5 class="text-h5 mb-4"> -->
-<!--          Accesos Rápidos -->
-<!--        </h5> -->
-<!--      </VCol> -->
-<!--      <VCol -->
-<!--        cols="12" -->
-<!--        md="4" -->
-<!--      > -->
-<!--        <VBtn -->
-<!--          block -->
-<!--          color="secondary" -->
-<!--          @click="goToCatalog" -->
-<!--        > -->
-<!--          <VIcon -->
-<!--            start -->
-<!--            icon="tabler-store" -->
-<!--          /> Ver Catálogo -->
-<!--        </VBtn> -->
-<!--      </VCol> -->
-<!--      <VCol -->
-<!--        cols="12" -->
-<!--        md="4" -->
-<!--      > -->
-<!--        <VBtn -->
-<!--          block -->
-<!--          color="info" -->
-<!--          @click="goToMyProducts" -->
-<!--        > -->
-<!--          <VIcon -->
-<!--            start -->
-<!--            icon="tabler-packages" -->
-<!--          /> Mis Productos -->
-<!--        </VBtn> -->
-<!--      </VCol> -->
-<!--      <VCol -->
-<!--        cols="12" -->
-<!--        md="4" -->
-<!--      > -->
-<!--        <VBtn -->
-<!--          block -->
-<!--          color="warning" -->
-<!--          @click="goToPublish" -->
-<!--        > -->
-<!--          <VIcon -->
-<!--            start -->
-<!--            icon="tabler-upload" -->
-<!--          /> Publicar Producto -->
-<!--        </VBtn> -->
-<!--      </VCol> -->
-<!--    </VRow> -->
-<!--  </div> -->
-<!-- </template> -->
-
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
+import api from '@/services/axios'
+// eslint-disable-next-line no-restricted-imports
+import VueApexCharts from 'vue3-apexcharts' // 💡 1. IMPORTAMOS LA LIBRERÍA DE GRÁFICOS
+import { useTheme } from 'vuetify'
 
-// Define la página y sus permisos
 definePage({
   meta: {
-    requiresAuth: true,
     layout: 'default',
+    requiresAuth: true,
   },
 })
 
-// 💡 CORRECCIÓN: Lee 'usuario' (que es lo que guarda login.vue) en lugar de 'userData'
+// --- Estado General ---
+const stats = ref(null)
+const precios = ref(null)
+const isLoading = ref(true)
+const error = ref(null)
 const userData = ref(JSON.parse(localStorage.getItem('usuario') || '{}'))
-const router = useRouter() // Inicializar router
+const vuetifyTheme = useTheme()
 
-// --- 💡 PRECIOS FIJOS (PLACEHOLDER) ---
-const precios = ref({
-  cafe: { nombre: 'Café (Quintal)', precio: 'Q320.50 (aprox)', icono: 'tabler-coffee' },
-  frijol: { nombre: 'Frijol (Quintal)', precio: 'Q580.00 (aprox)', icono: 'tabler-leaf' },
-  maiz: { nombre: 'Maíz (Quintal)', precio: 'Q190.00 (aprox)', icono: 'tabler-corn' },
+// --- 💡 2. ESTADO Y OPCIONES PARA LOS GRÁFICOS ---
+const lineChartSeries = ref([])
+const donutChartSeries = ref([])
+
+const lineChartOptions = computed(() => {
+  const currentTheme = vuetifyTheme.current.value.colors
+
+  return {
+    chart: { type: 'line', toolbar: { show: false } },
+    xaxis: {
+      categories: [],
+      labels: { style: { colors: currentTheme.onSurface } },
+    },
+    yaxis: {
+      labels: {
+        style: { colors: currentTheme.onSurface },
+        formatter: value => `Q${value.toFixed(0)}`,
+      },
+    },
+    stroke: { curve: 'smooth' },
+    grid: { borderColor: 'rgba(var(--v-border-color), var(--v-border-opacity))' },
+    colors: [currentTheme.primary],
+    tooltip: { theme: vuetifyTheme.current.value.dark ? 'dark' : 'light' },
+  }
 })
 
-// --- Funciones de Navegación ---
-const goToCatalog = () => router.push({ path: '/apps/consumidor/catalogo' })
-const goToMyProducts = () => router.push({ path: '/apps/productor/mis-productos' })
-const goToPublish = () => router.push({ path: '/apps/productor/publicar' })
+const donutChartOptions = computed(() => {
+  const currentTheme = vuetifyTheme.current.value.colors
+
+  return {
+    chart: { type: 'donut' },
+    labels: [],
+    legend: { labels: { colors: currentTheme.onSurface } },
+    plotOptions: { pie: { donut: { labels: { show: true, total: { show: true, label: 'Total' } } } } },
+    tooltip: { theme: vuetifyTheme.current.value.dark ? 'dark' : 'light' },
+  }
+})
+
+// --- Carga de Datos ---
+onMounted(async () => {
+  isLoading.value = true
+  try {
+    const response = await api.get('/dashboard/stats')
+
+    stats.value = response.data
+    precios.value = response.data.precios_referencia
+
+    // --- 💡 3. POBLAR LOS GRÁFICOS CON DATOS DE LA API ---
+    if (response.data.grafico_ventas) {
+      lineChartSeries.value = [{ name: 'Ventas (Q)', data: response.data.grafico_ventas.data }]
+
+      // Actualizamos las 'options' del gráfico de líneas
+      lineChartOptions.value = {
+        ...lineChartOptions.value,
+        xaxis: {
+          ...lineChartOptions.value.xaxis,
+          categories: response.data.grafico_ventas.labels,
+        },
+      }
+    }
+
+    if (response.data.grafico_top_productos) {
+      donutChartSeries.value = response.data.grafico_top_productos.data
+
+      // Actualizamos las 'options' del gráfico de dona
+      donutChartOptions.value = {
+        ...donutChartOptions.value,
+        labels: response.data.grafico_top_productos.labels,
+      }
+    }
+
+  } catch (err) {
+    console.error('Error al cargar el dashboard:', err)
+    error.value = 'No se pudieron cargar las estadísticas.'
+  } finally {
+    isLoading.value = false
+  }
+})
 </script>
 
 <template>
-  <div>
-    <!-- Saludo al Usuario -->
-    <VCard class="mb-6">
-      <VCardText>
-        <h3 class="text-h3">
-          <!-- Ahora 'userData.primer_nombre' SÍ tendrá datos -->
-          ¡Bienvenido/a, {{ userData.primer_nombre || 'Usuario' }}! 👋
-        </h3>
-        <p class="text-body-1">
-          Aquí tienes un resumen rápido de los precios de referencia hoy.
-        </p>
-      </VCardText>
-    </VCard>
+  <VContainer>
+    <!-- 💡 --- MENSAJE DE BIENVENIDA MEJORADO --- 💡 -->
+    <VRow class="mb-6">
+      <VCol cols="12">
+        <VCard>
+          <VCardText class="d-flex align-center gap-4">
+            <VAvatar
+              rounded
+              size="60"
+              color="primary"
+              variant="tonal"
+            >
+              <VIcon
+                icon="tabler-plant-2"
+                size="30"
+              />
+            </VAvatar>
+            <div>
+              <h4 class="text-h4">
+                ¡Bienvenido/a, {{ userData.primer_nombre || 'Usuario' }}! 👋
+              </h4>
+              <p
+                v-if="stats"
+                class="text-medium-emphasis mb-0"
+              >
+                Aquí está tu resumen de hoy como {{ stats.rol }}.
+              </p>
+            </div>
+          </VCardText>
+        </VCard>
+      </VCol>
+    </VRow>
+    <!-- --- FIN DEL MENSAJE DE BIENVENIDA --- -->
 
-    <!-- Sección de Precios -->
-    <VRow>
+    <!-- Alerta de Carga -->
+    <VAlert
+      v-if="isLoading"
+      type="info"
+      variant="tonal"
+      title="Cargando estadísticas..."
+    />
+
+    <!-- Alerta de Error -->
+    <VAlert
+      v-else-if="error"
+      type="error"
+      variant="tonal"
+      :title="error"
+    />
+
+    <!-- Tarjetas de Estadísticas (KPIs) -->
+    <VRow v-if="stats && stats.tarjetas">
+      <VCol
+        v-for="tarjeta in stats.tarjetas"
+        :key="tarjeta.titulo"
+        cols="12"
+        sm="6"
+        md="3"
+      >
+        <VCard>
+          <VCardText class="d-flex align-center">
+            <VAvatar
+              :color="tarjeta.color || 'primary'"
+              variant="tonal"
+              size="40"
+              class="me-4"
+            >
+              <VIcon :icon="tarjeta.icono" />
+            </VAvatar>
+            <div>
+              <span class="text-caption">{{ tarjeta.titulo }}</span>
+              <h5 class="text-h5">
+                {{ tarjeta.valor }}
+              </h5>
+            </div>
+          </VCardText>
+        </VCard>
+      </VCol>
+    </VRow>
+
+    <!-- --- 👇 4. NUEVA SECCIÓN DE GRÁFICOS 👇 --- -->
+    <VRow
+      v-if="stats && (stats.rol === 'admin' || stats.rol === 'productor')"
+      class="mt-6"
+    >
+      <!-- Gráfico de Líneas (Ventas) -->
+      <VCol
+        cols="12"
+        md="8"
+      >
+        <VCard>
+          <VCardTitle>Ventas Últimos 7 Días</VCardTitle>
+          <VCardText>
+            <VueApexCharts
+              type="line"
+              height="300"
+              :options="lineChartOptions"
+              :series="lineChartSeries"
+            />
+          </VCardText>
+        </VCard>
+      </VCol>
+
+      <!-- Gráfico de Dona (Top Productos) -->
+      <VCol
+        cols="12"
+        md="4"
+      >
+        <VCard>
+          <VCardTitle>Top 5 Productos (Uds.)</VCardTitle>
+          <VCardText>
+            <VueApexCharts
+              type="donut"
+              height="300"
+              :options="donutChartOptions"
+              :series="donutChartSeries"
+            />
+          </VCardText>
+        </VCard>
+      </VCol>
+    </VRow>
+    <!-- --- FIN DE LA SECCIÓN DE GRÁFICOS --- -->
+
+    <!-- Precios de Referencia (Esto ya lo teníamos) -->
+    <VRow
+      v-if="precios"
+      class="mt-6"
+    >
+      <VCol cols="12">
+        <h5 class="text-h5 mb-4">
+          Precios de Referencia (Promedio de Mercado)
+        </h5>
+      </VCol>
       <VCol
         v-for="(item, key) in precios"
         :key="key"
@@ -258,199 +252,12 @@ const goToPublish = () => router.push({ path: '/apps/productor/publicar' })
             <div>
               <span class="text-caption">{{ item.nombre }}</span>
               <h5 class="text-h5">
-                {{ item.precio }}
+                {{ item.precio > 0 ? `Q${item.precio.toFixed(2)}` : 'N/A' }}
               </h5>
             </div>
           </VCardText>
         </VCard>
       </VCol>
     </VRow>
-
-    <!-- Accesos Rápidos -->
-    <VRow class="mt-6">
-      <VCol cols="12">
-        <h5 class="text-h5 mb-4">
-          Accesos Rápidos
-        </h5>
-      </VCol>
-      <VCol
-        cols="12"
-        md="4"
-      >
-        <VBtn
-          block
-          color="secondary"
-          @click="goToCatalog"
-        >
-          <VIcon
-            start
-            icon="tabler-store"
-          /> Ver Catálogo
-        </VBtn>
-      </VCol>
-      <VCol
-        cols="12"
-        md="4"
-      >
-        <VBtn
-          block
-          color="info"
-          @click="goToMyProducts"
-        >
-          <VIcon
-            start
-            icon="tabler-packages"
-          /> Mis Productos
-        </VBtn>
-      </VCol>
-      <VCol
-        cols="12"
-        md="4"
-      >
-        <VBtn
-          block
-          color="warning"
-          @click="goToPublish"
-        >
-          <VIcon
-            start
-            icon="tabler-upload"
-          /> Publicar Producto
-        </VBtn>
-      </VCol>
-    </VRow>
-  </div>
+  </VContainer>
 </template>
-
-
-
-<!-- <script setup> -->
-<!-- import { ref, onMounted } from 'vue' -->
-<!-- import { useRouter } from 'vue-router' -->
-
-<!-- // Define la página y sus permisos -->
-<!-- definePage({ -->
-<!--  meta: { -->
-<!--    requiresAuth: true, -->
-<!--    layout: 'default', -->
-<!--  }, -->
-<!-- }) -->
-
-<!-- // (Asumiendo que guardas los datos del usuario en localStorage al hacer login) -->
-<!-- const userData = ref(JSON.parse(localStorage.getItem('userData') || '{}')) -->
-<!-- const router = useRouter() // Inicializar router -->
-
-<!-- // -&#45;&#45; 💡 PRECIOS FIJOS (PLACEHOLDER) -&#45;&#45; -->
-<!-- // Quitamos la llamada a la API de Gemini que daba error 403 -->
-<!-- // y usamos precios de ejemplo. -->
-<!-- const precios = ref({ -->
-<!--  cafe: { nombre: 'Café (Quintal)', precio: 'Q320.50 (aprox)', icono: 'tabler-coffee' }, -->
-<!--  frijol: { nombre: 'Frijol (Quintal)', precio: 'Q580.00 (aprox)', icono: 'tabler-leaf' }, -->
-<!--  maiz: { nombre: 'Maíz (Quintal)', precio: 'Q190.00 (aprox)', icono: 'tabler-corn' }, -->
-<!-- }) -->
-
-<!-- // -&#45;&#45; Funciones de Navegación -&#45;&#45; -->
-<!-- // Usamos router.push con path porque los nombres pueden variar -->
-<!-- const goToCatalog = () => router.push({ path: '/apps/consumidor/catalogo' }) -->
-<!-- const goToMyProducts = () => router.push({ path: '/apps/productor/mis-productos' }) -->
-<!-- const goToPublish = () => router.push({ path: '/apps/productor/publicar' }) -->
-<!-- </script> -->
-
-<!-- <template> -->
-<!--  <div> -->
-<!--    &lt;!&ndash; Saludo al Usuario &ndash;&gt; -->
-<!--    <VCard class="mb-6"> -->
-<!--      <VCardText> -->
-<!--        <h3 class="text-h3"> -->
-<!--          ¡Bienvenido/a, {{ userData.primer_nombre || 'Usuario' }}! 👋 -->
-<!--        </h3> -->
-<!--        <p class="text-body-1"> -->
-<!--          Aquí tienes un resumen rápido de los precios de referencia hoy. -->
-<!--        </p> -->
-<!--      </VCardText> -->
-<!--    </VCard> -->
-
-<!--    &lt;!&ndash; Sección de Precios &ndash;&gt; -->
-<!--    <VRow> -->
-<!--      <VCol -->
-<!--        v-for="(item, key) in precios" -->
-<!--        :key="key" -->
-<!--        cols="12" -->
-<!--        md="4" -->
-<!--      > -->
-<!--        <VCard elevation="2"> -->
-<!--          <VCardText class="d-flex align-center gap-4"> -->
-<!--            <VAvatar -->
-<!--              :icon="item.icono" -->
-<!--              color="primary" -->
-<!--              variant="tonal" -->
-<!--              size="40" -->
-<!--              rounded -->
-<!--            /> -->
-<!--            <div> -->
-<!--              <span class="text-caption">{{ item.nombre }}</span> -->
-<!--              <h5 class="text-h5"> -->
-<!--                {{ item.precio }} -->
-<!--              </h5> -->
-<!--            </div> -->
-<!--          </VCardText> -->
-<!--        </VCard> -->
-<!--      </VCol> -->
-<!--    </VRow> -->
-
-<!--    &lt;!&ndash; Accesos Rápidos &ndash;&gt; -->
-<!--    <VRow class="mt-6"> -->
-<!--      <VCol cols="12"> -->
-<!--        <h5 class="text-h5 mb-4"> -->
-<!--          Accesos Rápidos -->
-<!--        </h5> -->
-<!--      </VCol> -->
-<!--      <VCol -->
-<!--        cols="12" -->
-<!--        md="4" -->
-<!--      > -->
-<!--        <VBtn -->
-<!--          block -->
-<!--          color="secondary" -->
-<!--          @click="goToCatalog" -->
-<!--        > -->
-<!--          <VIcon -->
-<!--            start -->
-<!--            icon="tabler-store" -->
-<!--          /> Ver Catálogo -->
-<!--        </VBtn> -->
-<!--      </VCol> -->
-<!--      <VCol -->
-<!--        cols="12" -->
-<!--        md="4" -->
-<!--      > -->
-<!--        <VBtn -->
-<!--          block -->
-<!--          color="info" -->
-<!--          @click="goToMyProducts" -->
-<!--        > -->
-<!--          <VIcon -->
-<!--            start -->
-<!--            icon="tabler-packages" -->
-<!--          /> Mis Productos -->
-<!--        </VBtn> -->
-<!--      </VCol> -->
-<!--      <VCol -->
-<!--        cols="12" -->
-<!--        md="4" -->
-<!--      > -->
-<!--        <VBtn -->
-<!--          block -->
-<!--          color="warning" -->
-<!--          @click="goToPublish" -->
-<!--        > -->
-<!--          <VIcon -->
-<!--            start -->
-<!--            icon="tabler-upload" -->
-<!--          /> Publicar Producto -->
-<!--        </VBtn> -->
-<!--      </VCol> -->
-<!--    </VRow> -->
-<!--  </div> -->
-<!-- </template> -->
-

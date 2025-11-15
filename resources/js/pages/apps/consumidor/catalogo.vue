@@ -20,7 +20,7 @@ const errorCarga = ref(null)
 
 const searchQuery = ref('')
 const selectedCategory = ref(null)
-const selectedPriceRange = ref([0, 500]) // Rango inicial
+const selectedPriceRange = ref([0, 1000000]) // Rango inicial
 
 // --- Carga inicial de datos ---
 const fetchCategories = async () => {

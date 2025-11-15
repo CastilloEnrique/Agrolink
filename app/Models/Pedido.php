@@ -23,7 +23,7 @@ class Pedido extends Model
         'usuario_id',
         'metodo_entrega_id',
         'direccion_entrega',
-        'estado',
+        'estado_pedido',
         'precio_total',
     ];
 
@@ -42,6 +42,13 @@ class Pedido extends Model
     public function detalles(): HasMany
     {
         return $this->hasMany(PedidoItem::class, 'pedido_id');
+    }
+    /**
+     * Relación: Un pedido pertenece a UN método de entrega.
+     */
+    public function metodoEntrega()
+    {
+        return $this->belongsTo(MetodoEntrega::class, 'metodo_entrega_id');
     }
 }
 

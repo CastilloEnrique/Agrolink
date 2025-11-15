@@ -1,232 +1,4 @@
 <?php
-//
-//namespace App\Http\Controllers\Api;
-//
-//use App\Http\Controllers\Controller;
-//use App\Models\PerfilProductor;
-//use App\Models\Producto;
-//use App\Models\ImagenProducto;
-//use App\Models\CategoriaProducto;
-//use App\Models\User; // 💡 --- IMPORTANTE: Importar el modelo User ---
-//use Illuminate\Http\Request;
-//use Illuminate\Support\Facades\Storage;
-//use Illuminate\Support\Facades\Log;
-//use Illuminate\Support\Facades\DB;
-//use Illuminate\Validation\Rule; // 💡 --- IMPORTANTE: Para validar email ---
-//
-//class ProductorController extends Controller
-//{
-//    // --- FUNCIÓN QUE YA TENÍAS ---
-//    public function getCategorias()
-//    {
-//        // Solo devuelve categorías activas y el ID/nombre
-//        return CategoriaProducto::where('activo', true)
-//            ->orderBy('nombre')
-//            ->get(['id', 'nombre']);
-//    }
-//
-//    // --- FUNCIÓN QUE YA TENÍAS (la de publicar producto) ---
-//    public function storeProduct(Request $request)
-//    {
-//        $user = $request->user();
-//
-//        // 1. Validar datos
-//        $validated = $request->validate([
-//            'nombre' => 'required|string|max:150',
-//            'descripcion' => 'nullable|string',
-//            'precio_referencia' => 'required|numeric|min:0.01',
-//            'unidad_medida' => 'nullable|string|max:50',
-//            'stock_actual' => 'required|integer|min:0',
-//            'categoria_id' => 'required|exists:categorias_producto,id',
-//            'fecha_cosecha' => 'nullable|date',
-//            'imagenes' => 'required|array|min:1',
-//            'imagenes.*' => 'image|mimes:jpeg,png,jpg,webp|max:5000',
-//        ]);
-//
-//        $producto = null;
-//
-//        try {
-//            DB::transaction(function () use ($request, $validated, $user, &$producto) {
-//
-//                // 2. Crear el Producto
-//                $producto = Producto::create([
-//                    'usuario_id' => $user->id,
-//                    'categoria_id' => $validated['categoria_id'],
-//                    'nombre' => $validated['nombre'],
-//                    'descripcion' => $validated['descripcion'],
-//                    'precio_referencia' => $validated['precio_referencia'],
-//                    'unidad_medida' => $validated['unidad_medida'],
-//                    'stock_actual' => $validated['stock_actual'],
-//                    'disponibilidad' => $validated['stock_actual'] > 0 ? 'disponible' : 'agotado',
-//                    'estado_publicacion' => 'pendiente_revision',
-//                    'fecha_cosecha' => $validated['fecha_cosecha'] ?? null,
-//                ]);
-//
-//                // 3. Lógica para subir MÚLTIPLES Imágenes
-//                if ($request->hasFile('imagenes')) {
-//                    foreach ($request->file('imagenes') as $index => $file) {
-//                        $path = $file->store('public/productos');
-//                        $rutaImagen = Storage::url($path);
-//
-//                        $producto->imagenes()->create([
-//                            'ruta_imagen' => $rutaImagen,
-//                            // Marcar la primera imagen (index 0) como la principal
-//                            'principal' => ($index == 0),
-//                        ]);
-//                    }
-//                }
-//
-//            }); // Fin de la transacción
-//
-//        } catch (\Exception $e) {
-//            Log::error('Error al subir producto o imágenes: ' . $e->getMessage());
-//            return response()->json(['message' => 'Error: Falló la subida. ' . $e->getMessage()], 500);
-//        }
-//
-//        return response()->json([
-//            'message' => 'Producto publicado y enviado a revisión exitosamente.',
-//            'producto' => $producto
-//        ], 201);
-//    }
-//
-//    // --- 💡💡 FUNCIÓN DE CARGAR PERFIL MODIFICADA 💡💡 ---
-//    /**
-//     * Obtiene el perfil COMPLETO (datos de User + PerfilProductor)
-//     */
-//    public function getPerfilCompleto(Request $request)
-//    {
-//        $user = $request->user();
-//
-//        // Cargar el perfil de productor
-//        $perfil = PerfilProductor::where('usuario_id', $user->id)->first();
-//
-//        // Combina los datos del usuario con los del perfil
-//        // Los campos del perfil (whatsapp, etc.) sobreescribirán
-//        // cualquier campo nulo del usuario si tienen el mismo nombre (ej. 'direccion')
-//        $data = $user->toArray();
-//        if ($perfil) {
-//            // array_merge es perfecto para esto
-//            $data = array_merge($data, $perfil->toArray());
-//        }
-//
-//        // Quitamos la contraseña del objeto, por seguridad
-//        unset($data['password']);
-//
-//        return response()->json($data);
-//    }
-//
-//    // --- 💡💡 FUNCIÓN DE GUARDAR PERFIL MODIFICADA 💡💡 ---
-//    /**
-//     * Guarda el perfil COMPLETO (datos en User y PerfilProductor)
-//     */
-//    public function storePerfilCompleto(Request $request)
-//    {
-//        $user = $request->user();
-//
-//        // 1. Definir los campos para cada modelo
-//        $userFields = [
-//            'primer_nombre' => 'required|string|max:100',
-//            'segundo_nombre' => 'nullable|string|max:100',
-//            'primer_apellido' => 'required|string|max:100',
-//            'segundo_apellido' => 'nullable|string|max:100',
-//            'dpi' => 'nullable|string|max:20',
-//            'nit' => 'nullable|string|max:20',
-//            'fecha_nacimiento' => 'nullable|date',
-//            // El correo es especial, debe ignorar al usuario actual al validar unicidad
-//            'correo' => [
-//                'required',
-//                'string',
-//                'email',
-//                'max:255',
-//                Rule::unique('users')->ignore($user->id),
-//            ],
-//            // Campos de ubicación que están en la tabla User
-//            'pais_id' => 'nullable|exists:paises,id',
-//            'departamento_id' => 'nullable|exists:departamentos,id',
-//            'municipio_id' => 'nullable|exists:municipios,id',
-//            'aldea_id' => 'nullable|exists:aldeas,id',
-//        ];
-//
-//        $productorFields = [
-//            'whatsapp' => 'nullable|string|max:50',
-//            'direccion' => 'nullable|string|max:255',
-//            'ubicacion_lat' => 'nullable|numeric|between:-90,90',
-//            'ubicacion_lng' => 'nullable|numeric|between:-180,180',
-//        ];
-//
-//        // 2. Validar TODO
-//        $validatedData = $request->validate(array_merge($userFields, $productorFields));
-//
-//        try {
-//            DB::transaction(function () use ($user, $validatedData, $userFields, $productorFields) {
-//
-//                // 3. Separar los datos validados
-//                $userData = array_intersect_key($validatedData, $userFields);
-//                $productorData = array_intersect_key($validatedData, $productorFields);
-//
-//                // 4. Actualizar el modelo User
-//                $user->update($userData);
-//
-//                // 5. Actualizar o Crear el modelo PerfilProductor
-//                PerfilProductor::updateOrCreate(
-//                    ['usuario_id' => $user->id],
-//                    $productorData
-//                );
-//            }); // Fin de la transacción
-//
-//        } catch (\Exception $e) {
-//            Log::error('Error al guardar perfil completo: ' . $e->getMessage());
-//            return response()->json(['message' => 'Error: Falló al guardar los datos. ' . $e->getMessage()], 500);
-//        }
-//
-//        return response()->json([
-//            'message' => 'Perfil completo guardado exitosamente.',
-//        ], 200);
-//    }
-//
-//    /**
-//     * Obtiene todos los productos publicados por el usuario autenticado.
-//     */
-//    public function getMisProductos(Request $request)
-//    {
-//        $user = $request->user();
-//
-//        // Obtener productos del usuario
-//        // Usamos 'with' para cargar el nombre de la categoría y la primera imagen
-//        $productos = Producto::where('usuario_id', $user->id)
-//            ->with([
-//                // Cargar el nombre de la categoría
-//                'categoria' => function ($query) {
-//                    $query->select('id', 'nombre'); // Solo traer id y nombre
-//                },
-//                // Cargar solo la primera imagen (la principal)
-//                'imagenes' => function ($query) {
-//                    $query->where('principal', true)->limit(1);
-//                }
-//            ])
-//            ->orderBy('created_at', 'desc') // Mostrar los más nuevos primero
-//            ->get();
-//
-//        // Formatear la respuesta para que sea más fácil de usar en Vue
-//        $productosFormateados = $productos->map(function ($producto) {
-//            return [
-//                'id' => $producto->id,
-//                'nombre' => $producto->nombre,
-//                'estado_publicacion' => $producto->estado_publicacion,
-//                'precio_referencia' => (float) $producto->precio_referencia,
-//                'stock_actual' => $producto->stock_actual,
-//                'unidad_medida' => $producto->unidad_medida,
-//                'categoria_nombre' => $producto->categoria->nombre ?? 'Sin categoría',
-//                // Obtener la URL de la primera imagen, si existe
-//                'primera_imagen' => $producto->imagenes->first()->ruta_imagen ?? null,
-//            ];
-//        });
-//
-//        return response()->json($productosFormateados);
-//    }
-//}
-//
-
 
 namespace App\Http\Controllers\Api;
 
@@ -290,8 +62,10 @@ class ProductorController extends Controller
                 ]);
                 if ($request->hasFile('imagenes')) {
                     foreach ($request->file('imagenes') as $index => $file) {
-                        $path = $file->store('public/productos');
-                        $rutaImagen = str_replace('public/', '', $path);
+
+                        $rutaImagen = $file->store('productos', 'public');
+
+
 
                         $producto->imagenes()->create([
                             'ruta_imagen' => $rutaImagen,
@@ -330,7 +104,8 @@ class ProductorController extends Controller
                 'stock_actual' => $producto->stock_actual,
                 'unidad_medida' => $producto->unidad_medida,
                 'categoria_nombre' => $producto->categoria->nombre ?? 'Sin categoría',
-                'primera_imagen' => $rutaImagen ? asset('storage/' . $rutaImagen) : null,
+                'primera_imagen' => $rutaImagen ? asset('storage/' . ltrim($rutaImagen, '/'))
+                    : null,
             ];
         });
         return response()->json($productosFormateados);
@@ -399,8 +174,8 @@ class ProductorController extends Controller
 
                 if ($request->hasFile('imagenes_nuevas')) {
                     foreach ($request->file('imagenes_nuevas') as $file) {
-                        $path = $file->store('public/productos');
-                        $rutaImagen = str_replace('public/', '', $path);
+                        // ✅ CORRECTO
+                        $rutaImagen = $file->store('productos', 'public');
                         $producto->imagenes()->create(['ruta_imagen' => $rutaImagen, 'principal' => false]);
                     }
                 }
@@ -591,9 +366,9 @@ class ProductorController extends Controller
             'fecha_nacimiento' => 'nullable|date',
             'correo' => [
                 'required', 'string', 'email', 'max:255',
-                Rule::unique('users')->ignore($user->id),
+                Rule::unique('usuarios', 'correo')->ignore($user->id),
             ],
-            'pais_id' => 'nullable|exists:paises,id',
+            'pais_id' => 'nullable|exists:pais,id',
             'departamento_id' => 'nullable|exists:departamentos,id',
             'municipio_id' => 'nullable|exists:municipios,id',
             // 'aldea_id' => 'nullable|exists:aldeas,id', // Removido si no se usa
@@ -668,7 +443,8 @@ class ProductorController extends Controller
                     'fecha_cosecha' => $producto->fecha_cosecha,
                     'productor' => $productorNombre,
                     'productor_id' => $producto->user->id,
-                    'imagen_url' => $rutaImagen ? asset('storage/' . $rutaImagen) : null,
+                    'imagen_url' => $rutaImagen ? asset('storage/' . ltrim($rutaImagen, '/'))
+                        : null,
                 ];
             });
 
@@ -684,19 +460,178 @@ class ProductorController extends Controller
     public function getProductByIdPublic($id)
     {
         $producto = Producto::where('estado_publicacion', 'aprobado')
-            ->with(['categoria:id,nombre', 'imagenes'])
+            ->with([
+                'categoria:id,nombre',
+                'imagenes', // <- Bien: 'imagenes' ya está en el 'with'
+                'user:id,primer_nombre,segundo_nombre,primer_apellido,segundo_apellido,pais_id,departamento_id,municipio_id,aldea_id,telefono,correo',
+                'user.pais:id,nombre',
+                'user.departamento:id,nombre',
+                'user.municipio:id,nombre',
+                'user.aldea:id,nombre',
+                'user.perfilProductor'
+            ])
             ->findOrFail($id);
 
-        $imagen = $producto->imagenes->first();
+        // --- 🔴 CAMBIO 1: YA NO BUSCAMOS SOLO LA PRIMERA IMAGEN ---
+        // $imagen = $producto->imagenes->first(); // <-- Esta línea se elimina
 
+        // --- ✅ CAMBIO 2: MAPEAMOS TODAS LAS IMÁGENES A SUS URLS ---
+        $imagenesUrls = $producto->imagenes->map(function ($img) {
+            return [
+                'id' => $img->id,
+                'url' => asset('storage/' . ltrim($img->ruta_imagen, '/')),
+                'principal' => $img->principal
+            ];
+        });
+
+        // ------------------------------
+        // 🔵 NOMBRE COMPLETO DEL PRODUCTOR (Sin cambios)
+        // ------------------------------
+        $productorNombre = trim(
+            $producto->user->primer_nombre . ' ' .
+            $producto->user->segundo_nombre . ' ' .
+            $producto->user->primer_apellido . ' ' .
+            $producto->user->segundo_apellido
+        );
+
+        // -------------------------------------
+        // 🟣 UBICACIÓN (Sin cambios)
+        // -------------------------------------
+        $ubicacion =
+            $producto->user->aldea->nombre ??
+            $producto->user->municipio->nombre ??
+            $producto->user->departamento->nombre ??
+            'Ubicación no disponible';
+
+        // --- ✅ CAMBIO 3: AJUSTAMOS EL JSON DE RESPUESTA ---
         return response()->json([
+            // Datos del producto
             'id' => $producto->id,
             'nombre' => $producto->nombre,
             'descripcion' => $producto->descripcion,
             'precio_referencia' => (float) $producto->precio_referencia,
             'unidad_medida' => $producto->unidad_medida,
             'categoria_nombre' => $producto->categoria->nombre ?? 'N/A',
-            'imagen_url' => $imagen?->url_publica,
+
+            // --- 💡 AQUÍ ESTÁ LA MODIFICACIÓN ---
+            // 'imagen_url' => $imagen ? asset('storage/' . ltrim($imagen->ruta_imagen, '/')) : null, // <-- Esta línea se reemplaza
+            'imagenes' => $imagenesUrls, // <-- por esta línea (es un array)
+
+            // Datos del productor
+            'productor' => $productorNombre,
+            'productor_id' => $producto->user->id,
+            'whatsapp' => $producto->user->perfilProductor->whatsapp ?? $producto->user->telefono,
+
+            // Ubicación
+            'ubicacion_nombre' => $ubicacion,
+
+            // Datos adicionales
+            'fecha_cosecha' => $producto->fecha_cosecha,
+            'stock_actual' => $producto->stock_actual,
+        ]);
+    }
+//
+    public function contactarWhatsapp($id)
+    {
+        $producto = Producto::with(['user.perfilProductor'])->find($id);
+
+        if (!$producto) {
+            return response()->json(['message' => 'Producto no encontrado'], 404);
+        }
+
+        $productor = $producto->user;
+
+        // 1️⃣ Número desde perfil_productor (whatsapp)
+        $numero = $productor->perfilProductor->whatsapp ?? null;
+
+        // 2️⃣ Si no hay en perfil_productor, usar el teléfono del usuario
+        if (!$numero) {
+            $numero = $productor->telefono ?? null;
+        }
+
+        // 3️⃣ Si no hay ninguno → error
+        if (!$numero) {
+            return response()->json(['message' => 'El productor no tiene un número configurado'], 400);
+        }
+
+        // Limpieza de caracteres no numéricos (opcional)
+        $numero = preg_replace('/[^0-9]/', '', $numero);
+
+        // Mensaje de WhatsApp
+        $mensaje = urlencode(
+            "Hola {$productor->primer_nombre}, vi tu producto \"{$producto->nombre}\" en Agrolink y estoy interesado. ¿Está disponible?"
+        );
+
+        // Link oficial de WhatsApp
+        $url = "https://wa.me/{$numero}?text={$mensaje}";
+
+        return response()->json([
+            'whatsapp_url' => $url,
+            'numero' => $numero,
+            'productor' => $productor->primer_nombre,
+            'producto' => $producto->nombre
+        ]);
+    }
+
+    public function productosRelacionados($id)
+    {
+        $producto = Producto::find($id);
+
+        if (!$producto) {
+            return response()->json(['message' => 'Producto no encontrado'], 404);
+        }
+
+        $relacionados = Producto::where('categoria_id', $producto->categoria_id)
+            ->where('id', '!=', $id)
+            ->whereIn('estado_publicacion', ['aprobado'])
+
+            ->with([
+                'imagenes' => function ($q) {
+                    $q->where('principal', true)->select('producto_id', 'ruta_imagen');
+                },
+                'categoria:id,nombre',
+            ])
+            ->limit(6)
+            ->get();
+
+        // FORMATEO DE RESPUESTA
+        $data = $relacionados->map(function ($p) {
+
+            $img = $p->imagenes->first();
+            $rutaImagen = $img ? asset('storage/' . ltrim($img->ruta_imagen, '/')) : null;
+
+
+            return [
+                'id' => $p->id,
+                'nombre' => $p->nombre,
+                'precio_referencia' => (float) $p->precio_referencia,
+                'categoria_nombre' => $p->categoria->nombre ?? 'N/A',
+                'imagen_url' => $rutaImagen,
+            ];
+        });
+
+        return response()->json($data);
+    }
+
+
+    public function perfilPublico($id)
+    {
+        $usuario = Usuario::with([
+            'perfilProductor.aldea.municipio.departamento',
+        ])->find($id);
+
+        if (!$usuario) {
+            return response()->json(['message' => 'Productor no encontrado'], 404);
+        }
+
+        return response()->json([
+            'nombre' => $usuario->primer_nombre . ' ' . $usuario->primer_apellido,
+            'foto' => $usuario->foto_perfil_url,
+            'telefono' => $usuario->telefono,
+            'aldea' => $usuario->aldea->nombre ?? null,
+            'municipio' => $usuario->municipio->nombre ?? null,
+            'departamento' => $usuario->departamento->nombre ?? null,
+            'productos' => $usuario->perfilProductor->productos ?? [],
         ]);
     }
 

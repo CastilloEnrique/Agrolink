@@ -2,44 +2,51 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/**
- * 💡 Este modelo es para tu tabla 'pedido_items'
- */
 class PedidoItem extends Model
 {
-    use HasFactory;
-
     /**
-     * Especificamos el nombre de tu tabla
+     * El nombre de la tabla en la base de datos.
+     * (Asumiendo que tu tabla se llama 'pedido_detalles' o 'pedido_items')
      */
-    protected $table = 'pedido_items';
+    protected $table = 'pedido_items'; // 💡 Revisa que este sea el nombre de tu tabla
 
     /**
-     * Le decimos a Eloquent que esta tabla no tiene 'created_at' ni 'updated_at'.
-     */
-    public $timestamps = false;
-
-    /**
-     * Campos adaptados a tu tabla 'pedido_items' (con las 2 columnas añadidas).
+     * Campos que se pueden llenar masivamente.
      */
     protected $fillable = [
         'pedido_id',
         'producto_id',
-        'productor_id', // 💡 Columna añadida
+        'productor_id',
         'cantidad',
         'precio_unitario',
-        'subtotal',     // 💡 Columna añadida
+        'subtotal',
     ];
 
     /**
-     * El item pertenece a un producto.
+     * 💡 RELACIÓN FALTANTE:
+     * Un item del detalle pertenece a UN pedido principal.
      */
-    public function producto(): BelongsTo
+    public function pedido()
+    {
+        return $this->belongsTo(Pedido::class, 'pedido_id');
+    }
+
+    /**
+     * 💡 RELACIÓN (Que ya debías tener para la otra vista):
+     * Un item del detalle pertenece a UN producto.
+     */
+    public function producto()
     {
         return $this->belongsTo(Producto::class, 'producto_id');
+    }
+
+    /**
+     * Opcional: Relación con el productor (vendedor)
+     */
+    public function productor()
+    {
+        return $this->belongsTo(Usuario::class, 'productor_id');
     }
 }
