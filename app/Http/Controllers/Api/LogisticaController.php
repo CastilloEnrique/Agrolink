@@ -21,3 +21,4 @@ class LogisticaController extends Controller
     }
 }
 // prueba deploy desde forge
+//PRUEBA   2
