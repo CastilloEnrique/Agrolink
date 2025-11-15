@@ -20,3 +20,4 @@ class LogisticaController extends Controller
         return response()->json($metodos);
     }
 }
+// prueba deploy desde forge
